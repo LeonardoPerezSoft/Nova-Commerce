@@ -1,0 +1,32 @@
+////////////////API GATEWAY/////////////////////////////////////////////////////////
+
+
+💡 Mis Sugerencias:
+Punto 2 - CORS
+Para un proyecto de ejercicio/desarrollo, déjalo como está ("*"). Pero cuando lo quieras hacer más profesional, te recomiendo:
+
+
+# En application.yaml o application-prod.yaml
+cors:
+  allowed-origins:
+    - http://localhost:3000      # Frontend local
+    - http://localhost:4200      # Angular local
+    - https://tudominio.com      # Producción
+    - https://www.tudominio.com
+
+Y en CorsConfig.java:
+corsConfig.setAllowedOrigins(allowedOriginsList); // En lugar de "*"
+
+
+
+Punto 3 - JWT Secret
+Para un proyecto de ejercicio, mi sugerencia es dejar un valor por defecto pero con un comentario claro:
+
+# JWT Configuration
+app:
+  jwt:
+    # ⚠️ DEVELOPMENT ONLY - En producción usar variable de entorno JWT_SECRET
+    # Para generar: openssl rand -base64 64
+    secret: ${JWT_SECRET:E8F7D6C4B5A3F2E1D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4}
+
+////////////////API GATEWAY/////////////////////////////////////////////////////////
