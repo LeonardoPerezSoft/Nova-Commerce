@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/liquibase/changes/001-create-category-table.yaml
+  - include:
+      file: db/liquibase/changes/002-create-product-table.yaml
+  - include:
+      file: db/liquibase/changes/003-seed-initial-data.yaml

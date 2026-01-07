@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: product-service
+  
+  profiles:
+    active: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  liquibase:
+    enabled: false
+
+server:
+  port: 0
+
+app:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tdmFsaWRhdGlvbi10ZXN0aW5n
+    internal-api-key: test-internal-api-key
+
+logging:
+  level:
+    root: ERROR
+    com.novacommerce: ERROR
