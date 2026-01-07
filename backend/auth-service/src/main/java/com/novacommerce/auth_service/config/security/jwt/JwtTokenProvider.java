@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${app.jwt.secret:nexatec-auth-secret-key-for-production-use-environment-variables}")
+    @Value("${app.jwt.secret:nova-auth-secret-key-for-production-use-environment-variables}")
     private String jwtSecret;
 
     @Value("${app.jwt.expiration:86400000}")

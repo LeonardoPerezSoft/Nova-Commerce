@@ -65,5 +65,5 @@ management:
 logging:
   level:
     root: INFO
-    com.automatec.nexatec: DEBUG
+    com.novacommerce: DEBUG
     org.springframework.cloud.gateway: DEBUG

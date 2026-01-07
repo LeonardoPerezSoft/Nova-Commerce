@@ -27,7 +27,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
     private final String internalApiKey;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public InternalApiKeyFilter(@Value("${app.jwt.internal-api-key}") String internalApiKey) {
+    public InternalApiKeyFilter(@Value("${app.jwt.internal-api-key:nova-internal-service-key-2024}") String internalApiKey) {
         this.internalApiKey = internalApiKey;
     }
 
