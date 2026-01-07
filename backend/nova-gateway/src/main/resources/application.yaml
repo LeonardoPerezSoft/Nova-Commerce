@@ -1,0 +1,69 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+    description: Servicio de enrutamiento y centralización..
+    version: 1.0.0
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  banner:
+    location: classpath:banner.txt
+    charset: UTF-8
+    mode: console
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:E8F7D6C4B5A3F2E1D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4}
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# Routes Configuration
+gateway:
+  routes:
+    auth-service:
+      uri: http://localhost:8081
+      path: /api/auth/**
+
+    user-service-users:
+      uri: http://localhost:8082
+      path: /api/users/**
+
+    user-service-roles:
+      uri: http://localhost:8082
+      path: /api/roles/**
+
+
+  public-paths:
+    - /api/auth/login
+    - /api/auth/refresh
+    - /swagger-ui/**
+    - /v3/api-docs/**
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.automatec.nexatec: DEBUG
+    org.springframework.cloud.gateway: DEBUG

@@ -1,0 +1,33 @@
+ ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗
+ ████╗  ██║██╔═══██╗██║   ██║██╔══██╗
+ ██╔██╗ ██║██║   ██║██║   ██║███████║
+ ██║╚██╗██║██║   ██║██║   ██║██╔══██║
+ ██║ ╚████║╚██████╔╝╚██████╔╝██║  ██║
+ ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
+
+        N O V A   —   N O V A C O M M E R C E
+
+ Plataforma E-Commerce | API Gateway & Microservices
+
+ Realizado por: Leonardo Pérez
+ Email: yesid.perez@sofka.com.co
+
+ ════════════════════════════════════════════════════
+
+ ▶ Servicio       : ${spring.application.name}
+ ▶ Entorno        : ${spring.profiles.active}
+ ▶ Versión        : ${project.version}
+
+ 🔐 Seguridad
+   • Autenticación JWT
+   • Validación de tokens en Gateway
+   • Principio Zero-Trust entre servicios
+
+ 📡 Ruteo Principal
+   • /api/auth/**     → Auth Service
+   • /api/users/**    → User Service
+   • /api/**          → Servicios internos
+
+ ════════════════════════════════════════════════════
+
+ 🚀 NovaCommerce iniciado correctamente
