@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/liquibase/001-create-customers-table.yaml
+  - include:
+      file: classpath:db/liquibase/002-seed-customers.yaml

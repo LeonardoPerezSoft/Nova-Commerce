@@ -52,6 +52,10 @@ gateway:
       uri: http://localhost:8083
       path: /api/categories/**
 
+    customer-service-customers:
+      uri: http://localhost:8084
+      path: /api/customers/**
+
 
   public-paths:
     - /api/auth/login
