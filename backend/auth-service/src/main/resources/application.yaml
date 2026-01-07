@@ -30,6 +30,7 @@ app:
     secret: ${JWT_SECRET:E8F7D6C4B5A3F2E1D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4}
     expiration: ${JWT_EXPIRATION:86400000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+    internal-api-key: ${INTERNAL_API_KEY:nova-internal-service-key-2024}
 
 # Configuración de comunicación con otros microservicios
 user-service:
@@ -43,6 +44,8 @@ feign:
         connectTimeout: 5000
         readTimeout: 5000
         loggerLevel: basic
+      user-service:
+        loggerLevel: full
 
   # Configuración de seed de datos iniciales (DEPRECATED - mover a user-service)
   seed:
@@ -62,3 +65,9 @@ springdoc:
     disable-swagger-default-url: true
     doc-expansion: none
   show-actuator: false
+
+# Logging para ver solicitudes Feign (encabezados)
+logging:
+  level:
+    com.novacommerce.auth_service.client: DEBUG
+    feign: DEBUG

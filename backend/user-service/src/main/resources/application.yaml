@@ -1,0 +1,76 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: user-service
+    description: Servicio de gestión de usuarios y roles...
+    version: 1.0.0
+
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  banner:
+    location: classpath:banner.txt
+    charset: UTF-8
+    mode: console
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nova_db
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  liquibase:
+    change-log: classpath:db/liquibase/changelog-master.yaml
+    enabled: true
+    drop-first: false
+
+# Configuración de la aplicación
+app:
+  name: ${APP_NAME:User Service}
+  description: ${APP_DESCRIPTION:Servicio de gestión de usuarios y roles para Nova Commerce}
+  version: ${APP_VERSION:1.0.0}
+  contact:
+    name: ${APP_CONTACT_NAME:Nova Commerce}
+    email: ${APP_CONTACT_EMAIL:yesid.perez@sofka.com.co}
+    url: ${APP_CONTACT_URL:https://novacomerce.com}
+
+  # Configuración de seed de datos iniciales
+  seed:
+    enabled: ${SEED_ENABLED:true}
+    admin:
+      username: ${SEED_ADMIN_USERNAME:admin}
+      email: ${SEED_ADMIN_EMAIL:admin@nova.com}
+      password: ${SEED_ADMIN_PASSWORD:Admin123!}
+
+  # Configuración de JWT
+  jwt:
+    secret: ${JWT_SECRET:E8F7D6C4B5A3F2E1D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4}
+    internal-api-key: ${INTERNAL_API_KEY:nova-internal-service-key-2024}
+
+# Configuración de OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true
+    doc-expansion: none
+  show-actuator: false
+
+logging:
+  level:
+    com.novacommerce.user_service.adapter.in.filter.InternalApiKeyFilter: DEBUG

@@ -53,6 +53,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        // Log de diagnóstico: listar nombres de headers recibidos
+        if (log.isDebugEnabled()) {
+            StringBuilder sb = new StringBuilder("Headers recibidos en gateway para ").append(path).append(": [");
+            request.getHeaders().forEach((name, values) -> sb.append(name).append(", "));
+            sb.append("]");
+            log.debug(sb.toString());
+        }
+
         // Extraer token del header
         String token = HeaderUtils.extractToken(request);
 

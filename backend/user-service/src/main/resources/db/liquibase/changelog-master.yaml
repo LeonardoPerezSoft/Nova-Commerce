@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/liquibase/changes/001-create-permissions-table.yaml
+  - include:
+      file: db/liquibase/changes/002-create-roles-table.yaml
+  - include:
+      file: db/liquibase/changes/003-create-users-table.yaml
+  - include:
+      file: db/liquibase/changes/004-create-role-permission-table.yaml
+  - include:
+      file: db/liquibase/changes/005-create-user-role-table.yaml
