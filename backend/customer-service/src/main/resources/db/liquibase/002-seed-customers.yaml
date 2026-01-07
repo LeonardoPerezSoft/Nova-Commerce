@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-customers
+      author: copilot
+      changes:
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: first_name, value: "Alice" }
+              - column: { name: last_name, value: "García" }
+              - column: { name: email, value: "alice@nova.com" }
+              - column: { name: phone, value: "+57 3001112233" }
+              - column: { name: status, value: "ACTIVE" }
+              - column: { name: loyalty_level, value: "BRONZE" }
+        - insert:
+            tableName: customers
+            columns:
+              - column: { name: first_name, value: "Bob" }
+              - column: { name: last_name, value: "Ramírez" }
+              - column: { name: email, value: "bob@nova.com" }
+              - column: { name: phone, value: "+57 3004445566" }
+              - column: { name: status, value: "ACTIVE" }
+              - column: { name: loyalty_level, value: "SILVER" }
