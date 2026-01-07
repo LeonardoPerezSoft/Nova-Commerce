@@ -1,0 +1,64 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+    description: Servicio de autenticación y autorización centralizada...
+    version: 1.0.0
+
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  banner:
+    location: classpath:banner.txt
+    charset: UTF-8
+    mode: console
+
+
+# Configuración de JWT
+app:
+  name: ${APP_NAME:Auth Service}
+  description: ${APP_DESCRIPTION:Servicio de autenticación y autorización centralizada para Nexatec Platform}
+  version: ${APP_VERSION:1.0.0}
+  contact:
+    name: ${APP_CONTACT_NAME:Automatec Team}
+    email: ${APP_CONTACT_EMAIL:support@automatec.com}
+    url: ${APP_CONTACT_URL:https://automatec.com}
+  jwt:
+    secret: ${JWT_SECRET:E8F7D6C4B5A3F2E1D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4F3E2D1C0B9A8F7E6D5C4B3A2F1E0D9C8B7A6F5E4D3C2B1A0F9E8D7C6B5A4}
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+# Configuración de comunicación con otros microservicios
+user-service:
+  url: ${USER_SERVICE_URL:http://localhost:8082}
+
+# Configuración de Feign
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+  # Configuración de seed de datos iniciales (DEPRECATED - mover a user-service)
+  seed:
+    enabled: false
+
+# Configuración de OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true
+    doc-expansion: none
+  show-actuator: false

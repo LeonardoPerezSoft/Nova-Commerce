@@ -7,41 +7,34 @@
 
         N O V A   —   N O V A C O M M E R C E
 
- Plataforma E-Commerce | API Gateway  Microservice
+ Plataforma E-Commerce | AUTH SERVICE Microservice
 
  Realizado por: Leonardo Pérez
  Email: yesid.perez@sofka.com.co
-
 
  ════════════════════════════════════════════════════════════════════════════
 
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-
  ▶ Service Name    : ${spring.application.name}
  ▶ Product Name    : ${app.name}
  ▶ Version         : ${app.version}
- ▶ Entorno        : ${spring.profiles.active}
  ▶ Profile         : ${spring.profiles.active:default}
  ▶ Port            : ${server.port}
  ▶ Spring Boot     : ${spring-boot.version}
 
+  📡 Endpoints:
+    • API Docs     → http://localhost:${server.port}/v3/api-docs
+    • Swagger UI   → http://localhost:${server.port}/swagger-ui.html
+    • Health       → http://localhost:${server.port}/actuator/health
 
-
-
- 🔐 Seguridad
-   • Autenticación JWT
-   • Validación de tokens en Gateway
-   • Principio Zero-Trust entre servicios
-
- 📡 Ruteo Principal
-   • /api/auth/**     → Auth Service
-   • /api/users/**    → User Service
-   • /api/**          → Servicios internos
+  🔐 Security: JWT Token-Based Authentication (Stateless)
+  📊 Database: PostgreSQL with Liquibase Migrations
 
   ════════════════════════════════════════════════════════════════════════════
 
-  🚀 Api Gateway Service started successfully
+  🚀 Auth Service started successfully
   ℹ  For more information, visit: https://novacommerce.com
 
   ════════════════════════════════════════════════════════════════════════════
+
