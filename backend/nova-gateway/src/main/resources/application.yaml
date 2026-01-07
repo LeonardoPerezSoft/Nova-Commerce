@@ -44,6 +44,14 @@ gateway:
       uri: http://localhost:8082
       path: /api/roles/**
 
+    product-service-products:
+      uri: http://localhost:8083
+      path: /api/products/**
+
+    product-service-categories:
+      uri: http://localhost:8083
+      path: /api/categories/**
+
 
   public-paths:
     - /api/auth/login
