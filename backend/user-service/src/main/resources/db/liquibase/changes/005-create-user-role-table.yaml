@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-user-role-table-005
+      author: auth-service
+      objectQuotingStrategy: QUOTE_ALL_OBJECTS
+      changes:
+        - createTable:
+            tableName: user_role
+            remarks: 'Tabla intermedia que relaciona usuarios con roles'
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+                  remarks: 'Identificador del usuario'
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_role_user_id
+                    references: users(id)
+              - column:
+                  name: role_id
+                  type: uuid
+                  remarks: 'Identificador del rol'
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_role_role_id
+                    references: roles(id)
+        - addPrimaryKey:
+            tableName: user_role
+            columnNames: user_id, role_id
+            constraintName: pk_user_role
+        - createIndex:
+            indexName: idx_user_role_user_id
+            tableName: user_role
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_user_role_role_id
+            tableName: user_role
+            columns:
+              - column:
+                  name: role_id

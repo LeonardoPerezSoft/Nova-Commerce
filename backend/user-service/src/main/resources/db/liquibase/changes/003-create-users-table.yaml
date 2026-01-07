@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-users-table-003
+      author: auth-service
+      objectQuotingStrategy: QUOTE_ALL_OBJECTS
+      changes:
+        - createTable:
+            tableName: users
+            remarks: 'Tabla que almacena los usuarios del sistema'
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: 'Identificador único del usuario'
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(100)
+                  remarks: 'Nombre de usuario único'
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_user_username
+              - column:
+                  name: email
+                  type: varchar(150)
+                  remarks: 'Email único del usuario'
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_user_email
+              - column:
+                  name: password
+                  type: varchar(255)
+                  remarks: 'Contraseña encriptada con BCrypt'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  remarks: 'Estado del usuario (ACTIVE, INACTIVE, LOCKED)'
+                  constraints:
+                    nullable: false
+                  defaultValue: ACTIVE
+              - column:
+                  name: enabled
+                  type: boolean
+                  remarks: 'Indica si el usuario está habilitado'
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: true
+              - column:
+                  name: locked
+                  type: boolean
+                  remarks: 'Indica si la cuenta está bloqueada'
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de creación del usuario'
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de última actualización'
+                  constraints:
+                    nullable: true
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - createIndex:
+            indexName: idx_user_username
+            tableName: users
+            columns:
+              - column:
+                  name: username
+        - createIndex:
+            indexName: idx_user_email
+            tableName: users
+            columns:
+              - column:
+                  name: email

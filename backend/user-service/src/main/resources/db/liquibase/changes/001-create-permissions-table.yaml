@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-permissions-table-001
+      author: auth-service
+      objectQuotingStrategy: QUOTE_ALL_OBJECTS
+      changes:
+        - createTable:
+            tableName: permissions
+            remarks: 'Tabla que almacena los permisos del sistema'
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: 'Identificador único del permiso'
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  remarks: 'Nombre único del permiso (ej: USER_CREATE, QUOTATION_APPROVE)'
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_permission_name
+              - column:
+                  name: description
+                  type: varchar(500)
+                  remarks: 'Descripción del permiso'
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de creación del registro'
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de última actualización'
+                  constraints:
+                    nullable: true
+                  defaultValueComputed: CURRENT_TIMESTAMP

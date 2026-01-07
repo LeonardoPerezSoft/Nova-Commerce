@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-roles-table-002
+      author: auth-service
+      objectQuotingStrategy: QUOTE_ALL_OBJECTS
+      changes:
+        - createTable:
+            tableName: roles
+            remarks: 'Tabla que almacena los roles del sistema'
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: 'Identificador único del rol'
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  remarks: 'Nombre único del rol (ej: ADMIN, HR, SALES, ENGINEER)'
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_role_name
+              - column:
+                  name: description
+                  type: varchar(500)
+                  remarks: 'Descripción del rol'
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de creación del registro'
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  remarks: 'Fecha de última actualización'
+                  constraints:
+                    nullable: true
+                  defaultValueComputed: CURRENT_TIMESTAMP
