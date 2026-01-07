@@ -24,19 +24,19 @@ public class OpenApiConfig {
     @Value("${app.name:Auth Service}")
     private String appName;
 
-    @Value("${app.description:Servicio de autenticación y autorización centralizada para Nexatec Platform}")
+    @Value("${app.description:Servicio de autenticación y autorización centralizada para Nova Commerce}")
     private String appDescription;
 
     @Value("${app.version:1.0.0}")
     private String appVersion;
 
-    @Value("${app.contact.name:Automatec Team}")
+    @Value("${app.contact.name:Nova Commerce Team}")
     private String contactName;
 
-    @Value("${app.contact.email:support@automatec.com}")
+    @Value("${app.contact.email:support@nova.com}")
     private String contactEmail;
 
-    @Value("${app.contact.url:https://automatec.com}")
+    @Value("${app.contact.url:https://novacommerce.com}")
     private String contactUrl;
 
     @Value("${server.port:8081}")
@@ -106,11 +106,11 @@ public class OpenApiConfig {
             .description("Local Development Server");
 
         Server devServer = new Server()
-            .url("https://api-dev.nexatec.com/auth")
+            .url("https://api-dev.novacommerce.com/auth")
             .description("Development Server");
 
         Server prodServer = new Server()
-            .url("https://api.nexatec.com/auth")
+            .url("https://api.novacommerce.com/auth")
             .description("Production Server");
 
         return List.of(localServer, devServer, prodServer);
