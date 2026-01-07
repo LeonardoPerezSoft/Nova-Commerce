@@ -1,0 +1,157 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-seed-initial-data
+      author: novacommerce
+      changes:
+        # Insert Categories
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: 'Electronics'
+              - column:
+                  name: description
+                  value: 'Electronic devices and accessories'
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: 'Clothing'
+              - column:
+                  name: description
+                  value: 'Apparel and fashion items'
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: 'Books'
+              - column:
+                  name: description
+                  value: 'Physical and digital books'
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: categories
+            columns:
+              - column:
+                  name: name
+                  value: 'Home & Garden'
+              - column:
+                  name: description
+                  value: 'Home improvement and gardening products'
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+
+        # Insert Sample Products
+        - insert:
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: 'Laptop Pro 15'
+              - column:
+                  name: description
+                  value: 'High-performance laptop with 15-inch display'
+              - column:
+                  name: price
+                  valueNumeric: 1299.99
+              - column:
+                  name: product_type
+                  value: 'PHYSICAL'
+              - column:
+                  name: category_id
+                  valueNumeric: 1
+              - column:
+                  name: stock_quantity
+                  valueNumeric: 50
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: 'Wireless Mouse'
+              - column:
+                  name: description
+                  value: 'Ergonomic wireless mouse with USB receiver'
+              - column:
+                  name: price
+                  valueNumeric: 29.99
+              - column:
+                  name: product_type
+                  value: 'PHYSICAL'
+              - column:
+                  name: category_id
+                  valueNumeric: 1
+              - column:
+                  name: stock_quantity
+                  valueNumeric: 200
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: 'Premium T-Shirt'
+              - column:
+                  name: description
+                  value: '100% cotton premium quality t-shirt'
+              - column:
+                  name: price
+                  valueNumeric: 24.99
+              - column:
+                  name: product_type
+                  value: 'PHYSICAL'
+              - column:
+                  name: category_id
+                  valueNumeric: 2
+              - column:
+                  name: stock_quantity
+                  valueNumeric: 150
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+        - insert:
+            tableName: products
+            columns:
+              - column:
+                  name: name
+                  value: 'E-Book: Java Programming'
+              - column:
+                  name: description
+                  value: 'Comprehensive guide to Java programming'
+              - column:
+                  name: price
+                  valueNumeric: 19.99
+              - column:
+                  name: product_type
+                  value: 'DIGITAL'
+              - column:
+                  name: category_id
+                  valueNumeric: 3
+              - column:
+                  name: stock_quantity
+                  valueNumeric: 9999
+              - column:
+                  name: status
+                  value: 'ACTIVE'
+      rollback:
+        - delete:
+            tableName: products
+        - delete:
+            tableName: categories
