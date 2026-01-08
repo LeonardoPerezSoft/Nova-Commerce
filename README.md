@@ -20,6 +20,19 @@ Plataforma de e-commerce modular basada en microservicios. El objetivo del proye
 - Customer Service: Gestión de clientes; endpoints públicos y `internal` protegidos por API Key.
 - Order Service: Creación y consulta de órdenes; validación con Customer/Product vía Feign; descuentos con Strategy Pattern.
 
+## 🧩 Microservicios y responsabilidades
+
+| Servicio | Rol principal |
+|--------|-------------|
+| API Gateway | Enrutamiento + propagación JWT |
+| Auth Service | Login, emisión y validación JWT |
+| User Service | Usuarios, roles y permisos |
+| Product Service | Catálogo y categorías |
+| Customer Service | Gestión de clientes y fidelidad |
+| Order Service | Creación de órdenes y descuentos |
+
+
+
 Puertos (por defecto):
 - Gateway 8080, Auth 8081, User 8082, Product 8083, Customer 8084, Order 8085
 
