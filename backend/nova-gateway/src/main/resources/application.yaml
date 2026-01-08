@@ -56,6 +56,9 @@ gateway:
       uri: http://localhost:8084
       path: /api/customers/**
 
+    order-service-orders:
+      uri: http://localhost:8085
+      path: /api/orders/**
 
   public-paths:
     - /api/auth/login

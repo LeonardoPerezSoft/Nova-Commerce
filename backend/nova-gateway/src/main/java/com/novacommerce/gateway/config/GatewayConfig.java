@@ -42,11 +42,17 @@ public class GatewayConfig {
     @Value("${gateway.routes.product-service-categories.path}")
     private String productServiceCategoriesPath;
 
-        @Value("${gateway.routes.customer-service-customers.uri}")
-        private String customerServiceUri;
+    @Value("${gateway.routes.customer-service-customers.uri}")
+    private String customerServiceUri;
 
-        @Value("${gateway.routes.customer-service-customers.path}")
-        private String customerServiceCustomersPath;
+    @Value("${gateway.routes.customer-service-customers.path}")
+    private String customerServiceCustomersPath;
+
+    @Value("${gateway.routes.order-service-orders.uri}")
+    private String orderServiceUri;
+
+    @Value("${gateway.routes.order-service-orders.path}")
+    private String orderServiceOrdersPath;
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
@@ -57,6 +63,7 @@ public class GatewayConfig {
         log.info("Route: {} -> {}", productServiceProductsPath, productServiceUri);
         log.info("Route: {} -> {}", productServiceCategoriesPath, productServiceUri);
         log.info("Route: {} -> {}", customerServiceCustomersPath, customerServiceUri);
+        log.info("Route: {} -> {}", orderServiceOrdersPath, orderServiceUri);
 
         return builder.routes()
                 .route(RouteConstants.AUTH_SERVICE_ID, r -> r
@@ -95,6 +102,12 @@ public class GatewayConfig {
                                 .stripPrefix(0)
                                 .removeRequestHeader("Cookie"))
                         .uri(customerServiceUri))
+                .route("order-service-orders", r -> r
+                        .path(orderServiceOrdersPath)
+                        .filters(f -> f
+                                .stripPrefix(0)
+                                .removeRequestHeader("Cookie"))
+                        .uri(orderServiceUri))
                 .build();
     }
 }

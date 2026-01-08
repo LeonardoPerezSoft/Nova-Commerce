@@ -2,12 +2,22 @@
 
 Microservicio de gestión de usuarios, roles y permisos para Nova Commerce.
 
-**Función principal:** Almacena y gestiona usuarios en PostgreSQL. Proporciona endpoints para CRUD de usuarios/roles y validación de credenciales vía endpoint interno.
+**Función principal:** Almacena y gestiona usuarios en PostgreSQL. Proporciona endpoints para CRUD de usuarios/roles y validación de credenciales vía endpoint interno que Auth-Service utiliza.
 
 ```
-Cliente → API Gateway → User-Service (PostgreSQL)
-                           ↑
-        Auth-Service ──────┘ (Feign: validación interna)
+Cliente (credenciales)
+  ↓
+API Gateway (8080)
+  ↓
+Auth-Service (8081) ──(Feign)──→ User-Service (8082, PostgreSQL)
+                                      ↑
+                       /internal/users/validate
+                        (validación interna)
+  ↓ (retorna JWT)
+API Gateway valida JWT localmente → Enruta a:
+                                    ├─ Customer-Service (8084)
+                                    ├─ Product-Service (8083)
+                                    └─ Order-Service (8085)
 ```
 
 ## 📋 Requisitos
@@ -29,10 +39,10 @@ cd backend/user-service
 
 ```sql
 -- Crear base de datos
-CREATE DATABASE nexatec_platform;
+CREATE DATABASE nova_db;
 
 -- Conectar a la base de datos
-\c nexatec_platform;
+\c nova_db;
 
 -- Las tablas se crean automáticamente con Liquibase
 ```
@@ -464,7 +474,7 @@ net start postgresql-x64-14         # Windows
 # Verificar credenciales en application.yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/nexatec_platform
+    url: jdbc:postgresql://localhost:5432/nova_db
     username: postgres
     password: postgres
 ```
@@ -480,8 +490,8 @@ server:
 ```bash
 # Ver logs detallados de Liquibase
 # Si necesitas recrear la base de datos:
-DROP DATABASE nexatec_platform;
-CREATE DATABASE nexatec_platform;
+DROP DATABASE nova_db;
+CREATE DATABASE nova_db;
 
 # O deshabilitar Liquibase temporalmente:
 spring:
@@ -571,14 +581,14 @@ Actuator endpoints disponibles:
 
 ## 📄 Licencia
 
-Este proyecto es propiedad intelectual de Automatec.
+Este proyecto es propiedad intelectual de Nova Commerce.
 
 ## 📞 Soporte
 
 Para soporte y preguntas:
-- Email: support@automatec.com
-- Web: https://www.automatec.com
+- Email: yesid.perez@sofka.com.co
+- Web: https://www.novacommerce.com
 
 ---
 
-Desarrollado con ❤️ por **Automatec**
+Desarrollado con ❤️ por **Leonardo Pérez**

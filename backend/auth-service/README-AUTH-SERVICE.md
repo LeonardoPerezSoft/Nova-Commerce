@@ -2,14 +2,19 @@
 
 Microservicio de autenticación y autorización centralizada para Nova Commerce.
 
-**Arquitectura:** Auth-Service NO maneja base de datos. Utiliza Feign Client para validar credenciales con User-Service y genera tokens JWT.
+**Arquitectura:** Auth-Service NO maneja base de datos. Utiliza Feign Client para validar credenciales con User-Service y genera tokens JWT que protegen toda la plataforma.
 
 Implementa **Clean Architecture** con separación clara entre dominio, aplicación y adaptadores.
 
 ```
-Cliente → API Gateway → Auth-Service → (Feign) → User-Service (BD PostgreSQL)
-                            ↓
-                       Genera JWT
+Cliente → API Gateway (8080) → Auth-Service (8081) → (Feign) → User-Service (8082, BD PostgreSQL)
+                                   ↓ Genera JWT
+                           Retorna al API Gateway
+                                   ↓
+                    JWT protege acceso a:
+                    ├─ Customer-Service (8084)
+                    ├─ Product-Service (8083)
+                    └─ Order-Service (8085)
 ```
 
 ## 📋 Requisitos
@@ -200,7 +205,7 @@ com.novacommerce.auth_service/
 ### Flujo de autenticación (Clean Architecture):
 
 ```
-HTTP Request
+HTTP Request (POST /api/auth/login)
     ↓
 AuthRestController (adapter/in/web)
     ↓ (implementa)
@@ -214,13 +219,40 @@ AuthService (application/service)
     │   UserServiceClient (Feign)
     │       ↓
     │   User-Service (http://localhost:8082)
+    │       ↓ Valida credenciales contra PostgreSQL
+    │       ↓ Retorna usuario, roles, permisos
     │
     └─→ TokenGeneratorPort (application/port/out)
             ↓ (implementado por)
         JwtTokenAdapter (adapter/out/jwt)
             ↓
         Genera JWT
+            ↓
+    Retorna a Cliente
+        ↓
+    Cliente → API Gateway (8080)
+            ↓ Valida JWT localmente
+            ↓ Inyecta headers (X-Username, X-Authorities)
+            ↓
+        Enruta a servicios backend:
+        ├─ Customer-Service (8084)
+        ├─ Product-Service (8083)
+        └─ Order-Service (8085)
 ```
+
+### JWT en la Plataforma
+
+El JWT generado por **Auth-Service** protege acceso a TODOS los microservicios:
+
+1. **Auth-Service** (8081) - **Genera JWT**
+2. **API Gateway** (8080) - **Valida JWT localmente** sin latencia
+3. **Servicios Backend**:
+   - Customer-Service (8084) - Confía en el gateway
+   - Product-Service (8083) - Confía en el gateway
+   - Order-Service (8085) - Confía en el gateway
+   - User-Service (8082) - Confía en el gateway
+
+**Ventaja:** JWT se valida una sola vez en el gateway, no en cada servicio.
 
 ### Endpoints
 

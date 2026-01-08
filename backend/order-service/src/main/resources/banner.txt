@@ -1,0 +1,32 @@
+
+ ╔════════════════════════════════════════════════════════════════╗
+ ║                                                                ║
+ ║   ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗                        ║
+ ║   ████╗  ██║██╔═══██╗██║   ██║██╔══██╗                       ║
+ ║   ██╔██╗ ██║██║   ██║██║   ██║███████║                       ║
+ ║   ██║╚██╗██║██║   ██║╚██╗ ██╔╝██╔══██║                       ║
+ ║   ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║                       ║
+ ║   ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝                       ║
+ ║                                                                ║
+ ║              C O M M E R C E                                  ║
+ ║              Order Service                                     ║
+ ║                                                                ║
+ ╚════════════════════════════════════════════════════════════════╝
+
+ ▶ Service Name   : ${app.name}
+ ▶ Version        : ${app.version}
+ ▶ Profile        : ${spring.profiles.active:default}
+ ▶ Port           : ${server.port}
+ ▶ Description    : ${app.description}
+
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  📦 Order Management System
+  🔐 Security: JWT Token-Based Authentication (Stateless)
+  🏗️  Architecture: Clean Architecture + Hexagonal
+  💼 Business Logic: Strategy Pattern for Discounts
+  🔄 Integration: Feign Clients (Customer & Product Services)
+
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ 🚀 Starting Order Service...

@@ -13,8 +13,9 @@ product-service/
 ├── adapter/
 │   ├── in/
 │   │   ├── web/            # REST Controllers
-│   │   │   ├── ProductRestController
-│   │   │   ├── CategoryRestController
+│   │   │   ├── ProductRestController       # Public /api/products/**
+│   │   │   ├── CategoryRestController      # Public /api/categories/**
+│   │   │   ├── InternalProductController   # Internal /internal/products/{id}
 │   │   │   └── GlobalExceptionHandler
 │   │   └── filter/         # Security Filters
 │   │       ├── JwtAuthenticationFilter
@@ -99,7 +100,7 @@ product-service/
 
 ## 🔌 API Endpoints
 
-### Products
+### Public Products
 
 | Método | Endpoint                        | Roles        | Descripción                |
 |--------|---------------------------------|--------------|----------------------------|
@@ -109,6 +110,12 @@ product-service/
 | POST   | /api/products                   | ADMIN        | Crear producto             |
 | PUT    | /api/products/{id}              | ADMIN        | Actualizar producto        |
 | DELETE | /api/products/{id}              | ADMIN        | Eliminar producto          |
+
+### Internal Products (Comunicación Inter-Servicios)
+
+| Método | Endpoint                | Header (Requerido)           | Descripción               |
+|--------|-------------------------|------------------------------|---------------------------|
+| GET    | /internal/products/{id} | X-Internal-API-Key: *key*    | Obtener producto (Order-Service) |
 
 ### Categories
 
@@ -222,11 +229,13 @@ El token debe contener:
 
 ### Internal API Key
 
-Endpoints bajo `/internal/**` requieren:
+Endpoints bajo `/internal/**` requieren header de protección:
 
 ```
 X-Internal-API-Key: nova-internal-service-key-2024
 ```
+
+Este endpoint es utilizado por order-service para validar disponibilidad de productos via Feign client.
 
 ## 📝 Ejemplos de Uso
 
@@ -274,6 +283,24 @@ curl -X GET "http://localhost:8083/api/products/category/1?page=0&size=10" \
   -H "Authorization: Bearer <JWT_TOKEN>"
 ```
 
+### Obtener Producto (Internal - Order-Service)
+
+```bash
+curl -X GET "http://localhost:8083/internal/products/1" \
+  -H "X-Internal-API-Key: nova-internal-service-key-2024"
+
+# Response:
+{
+  "id": 1,
+  "name": "Laptop",
+  "description": "High-performance laptop",
+  "price": 999.99,
+  "categoryName": "Electronics",
+  "stock": 50,
+  "status": "ACTIVE"
+}
+```
+
 ## 📚 Documentación API
 
 Swagger UI disponible en:
@@ -288,7 +315,9 @@ OpenAPI JSON:
 http://localhost:8083/v3/api-docs
 ```
 
-## 🔗 Integración con Gateway
+## 🔗 Integración con Gateway y Otros Servicios
+
+### Ruta en Gateway
 
 El gateway (puerto 8080) debe configurar la ruta:
 
@@ -302,6 +331,23 @@ spring:
           predicates:
             - Path=/api/products/**, /api/categories/**
 ```
+
+### Comunicación Inter-Servicios (Feign)
+
+Order-Service utiliza ProductServiceClient (Feign) para validar productos:
+
+```java
+@FeignClient(name = "product-service", url = "http://localhost:8083")
+public interface ProductServiceClient {
+    @GetMapping("/internal/products/{id}")
+    ProductResponse getProduct(
+        @PathVariable Long id,
+        @RequestHeader("X-Internal-API-Key") String apiKey
+    );
+}
+```
+
+Endpoint `/internal/products/{id}` está protegido con InternalApiKeyFilter que valida el header X-Internal-API-Key.
 
 ## 📊 Monitoreo
 
