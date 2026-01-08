@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-seed-sample-orders
+      author: copilot
+      changes:
+        # Orden 1: Cliente Alice (ID 1)
+        - insert:
+            tableName: orders
+            columns:
+              - column: { name: customer_id, value: 1 }
+              - column: { name: status, value: "CREATED" }
+              - column: { name: total_before_discount, value: 150.00 }
+              - column: { name: discount_total, value: 15.00 }
+              - column: { name: total_after_discount, value: 135.00 }
+        
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, value: 1 }
+              - column: { name: product_id, value: 1 }
+              - column: { name: product_name, value: "Producto Demo 1" }
+              - column: { name: quantity, value: 2 }
+              - column: { name: unit_price, value: 50.00 }
+              - column: { name: product_type, value: "ELECTRONICS" }
+        
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, value: 1 }
+              - column: { name: product_id, value: 2 }
+              - column: { name: product_name, value: "Producto Demo 2" }
+              - column: { name: quantity, value: 1 }
+              - column: { name: unit_price, value: 50.00 }
+              - column: { name: product_type, value: "CLOTHING" }
+        
+        # Orden 2: Cliente Bob (ID 2)
+        - insert:
+            tableName: orders
+            columns:
+              - column: { name: customer_id, value: 2 }
+              - column: { name: status, value: "PAID" }
+              - column: { name: total_before_discount, value: 200.00 }
+              - column: { name: discount_total, value: 20.00 }
+              - column: { name: total_after_discount, value: 180.00 }
+        
+        - insert:
+            tableName: order_items
+            columns:
+              - column: { name: order_id, value: 2 }
+              - column: { name: product_id, value: 1 }
+              - column: { name: product_name, value: "Producto Demo 1" }
+              - column: { name: quantity, value: 4 }
+              - column: { name: unit_price, value: 50.00 }
+              - column: { name: product_type, value: "ELECTRONICS" }

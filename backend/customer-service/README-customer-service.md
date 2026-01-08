@@ -90,8 +90,9 @@ com.novacommerce.customer_service/
 ├── adapter/                         ← Adaptadores
 │   ├── in/
 │   │   └── web/
-│   │       ├── CustomerRestController.java
-│   │       ├── dto/                 # CustomerDto
+│   │       ├── CustomerRestController.java       # Public /api/customers/**
+│   │       ├── InternalCustomerController.java   # Internal /internal/customers/{id}
+│   │       ├── dto/                 # CustomerDto, InternalCustomerResponse
 │   │       └── mapper/              # CustomerMapper
 │   └── out/                         # Persistencia/Integraciones (si aplica)
 │
@@ -116,19 +117,30 @@ Archivos relevantes:
 
 ## 🔐 Seguridad
 
+### JWT Authentication
 - Autenticación mediante JWT (Bearer token) y autorización por roles.
 - Roles usados: `ROLE_ADMIN`, `ROLE_READ`, `ROLE_CREATE`, `ROLE_UPDATE`, `ROLE_DELETE`.
 - Rutas públicas: `/v3/api-docs/**`, `/swagger-ui.html`, `/swagger-ui/**`, `/actuator/health`, `/actuator/info`.
-- Rutas internas: cualquier ruta que empiece por `/internal/**` requiere el header `X-Internal-API-Key` (ver `InternalApiKeyFilter`).
+
+### Internal API Key Protection
+- Rutas internas: cualquier ruta que empiece por `/internal/**` requiere el header `X-Internal-API-Key`:
+  ```
+  X-Internal-API-Key: nova-internal-service-key-2024
+  ```
+- Validado por `InternalApiKeyFilter` para comunicación entre servicios.
+- Order-Service utiliza este endpoint para validar clientes antes de crear órdenes.
 
 ## 🧭 Endpoints
 
-### Customers
+### Public Customers
 - GET `/api/customers` — Listar clientes
 - GET `/api/customers/{id}` — Obtener cliente por ID
 - POST `/api/customers` — Crear cliente
 - PUT `/api/customers/{id}` — Actualizar cliente
 - DELETE `/api/customers/{id}` — Eliminar cliente
+
+### Internal Customers (Comunicación Inter-Servicios)
+- GET `/internal/customers/{id}` — Obtener cliente (Order-Service) - Requiere `X-Internal-API-Key`
 
 ## 📋 Ejemplos de uso
 
@@ -153,13 +165,21 @@ curl -X POST http://localhost:8084/api/customers \
   }'
 ```
 
-### Ruta interna (ejemplo)
+### Ruta interna (Order-Service)
 ```bash
-curl -X GET http://localhost:8084/internal/health \
+curl -X GET http://localhost:8084/internal/customers/3 \
   -H "X-Internal-API-Key: nova-internal-service-key-2024"
-```
 
-> Nota: Las rutas internas dependen de los endpoints definidos bajo `/internal/**` en tu proyecto. El filtro valida el header de llave interna.
+# Response:
+{
+  "id": 3,
+  "names": "Juan Pérez",
+  "email": "juan@nova.com",
+  "phone": "+57 3001112233",
+  "status": "ACTIVE",
+  "loyaltyLevel": "GOLD"
+}
+```
 
 ## 🧪 Pruebas
 
@@ -172,6 +192,37 @@ mvnw.cmd test
 ```powershell
 mvnw.cmd spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=local"
 ```
+
+## 🔗 Integración con Gateway y Otros Servicios
+
+### Ruta en Gateway
+```yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customer-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/customers/**
+```
+
+### Comunicación Inter-Servicios (Feign)
+
+Order-Service utiliza CustomerServiceClient (Feign) para validar clientes:
+
+```java
+@FeignClient(name = "customer-service", url = "http://localhost:8084")
+public interface CustomerServiceClient {
+    @GetMapping("/internal/customers/{id}")
+    InternalCustomerResponse getCustomer(
+        @PathVariable Long id,
+        @RequestHeader("X-Internal-API-Key") String apiKey
+    );
+}
+```
+
+Endpoint `/internal/customers/{id}` retorna datos básicos del cliente (id, nombres, email, phone, status, loyaltyLevel) protegido con InternalApiKeyFilter.
 
 ## 🔍 Troubleshooting
 
