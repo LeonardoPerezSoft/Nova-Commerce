@@ -31,11 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            Claims claims = tokenValidator.validate(token);
-            List<String> roles = tokenValidator.extractAuthorities(claims);
-            List<SimpleGrantedAuthority> authorities = roles == null ? List.of() : roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-            Authentication authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                Claims claims = tokenValidator.validate(token);
+                List<String> roles = tokenValidator.extractAuthorities(claims);
+                List<SimpleGrantedAuthority> authorities = roles == null ? List.of() : roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+                Authentication authentication = new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                // Token inválido - continuar sin autenticación
+            }
         }
         filterChain.doFilter(request, response);
     }
