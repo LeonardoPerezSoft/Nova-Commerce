@@ -1,0 +1,12 @@
+# Test configuration - Minimal setup for @WebMvcTest
+spring:
+  security:
+    user:
+      name: testuser
+      password: testpass
+  profiles:
+    active: local
+  oauth2:
+    resourceserver:
+      jwt:
+        issuer-uri: http://localhost:8090
