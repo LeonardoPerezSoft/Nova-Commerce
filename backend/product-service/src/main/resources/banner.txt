@@ -32,7 +32,7 @@
 
   ════════════════════════════════════════════════════════════════════════════
 
-  🚀 product Service started successfully
+  🚀 Product Service started successfully
   ℹ  For more information, visit: https://novacommerce.com
 
   ════════════════════════════════════════════════════════════════════════════
