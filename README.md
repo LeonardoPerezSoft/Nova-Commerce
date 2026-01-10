@@ -184,9 +184,21 @@ sequenceDiagram
 
 ## Documentación por Microservicio
 
+### Documentación Técnica (README)
+
 - API Gateway: [backend/nova-gateway/README-API-GATEWAY.md](backend/nova-gateway/README-API-GATEWAY.md)
 - Auth Service: [backend/auth-service/README-AUTH-SERVICE.md](backend/auth-service/README-AUTH-SERVICE.md)
 - User Service: [backend/user-service/README-USER-SERVICE.md](backend/user-service/README-USER-SERVICE.md)
 - Product Service: [backend/product-service/README-product-service.md](backend/product-service/README-product-service.md)
 - Customer Service: [backend/customer-service/README-customer-service.md](backend/customer-service/README-customer-service.md)
 - Order Service: [backend/order-service/README-order-service.md](backend/order-service/README-order-service.md)
+
+### Historias de Usuario por Microservicio
+
+- **Épica Global**: [HUS_NOVA_PLATFORM.md](HUS_NOVA_PLATFORM.md)
+- API Gateway: [backend/nova-gateway/docs/HUS_GATEWAY_SERVICE.md](backend/nova-gateway/docs/HUS_GATEWAY_SERVICE.md)
+- Auth Service: [backend/auth-service/docs/HUS_AUTH_SERVICE.md](backend/auth-service/docs/HUS_AUTH_SERVICE.md)
+- User Service: [backend/user-service/docs/HUS_USER_SERVICE.md](backend/user-service/docs/HUS_USER_SERVICE.md)
+- Product Service: [backend/product-service/docs/HUS_PRODUCT_SERVICE.md](backend/product-service/docs/HUS_PRODUCT_SERVICE.md)
+- Customer Service: [backend/customer-service/docs/HU_CUSTOMER_SERVICE.md](backend/customer-service/docs/HU_CUSTOMER_SERVICE.md)
+- Order Service: [backend/order-service/docs/HUS_ORDER_SERVICE.md](backend/order-service/docs/HUS_ORDER_SERVICE.md)
