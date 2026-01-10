@@ -103,6 +103,9 @@ jobs:
               echo "⚠️  CAUSA: Error en ejecución de tests (Surefire plugin)"
               echo ""
               grep -B 2 -A 10 "Failed to execute goal.*maven-surefire-plugin" maven-output.log
+              echo ""
+              echo "=== Detalles de errores en surefire-reports ==="
+              find backend -name "*.txt" -path "*/surefire-reports/*" -exec echo "Archivo: {}" \; -exec head -100 {} \; 2>/dev/null || echo "No se encontraron reportes detallados"
             else
               echo "⚠️  CAUSA: Error desconocido"
               echo ""
@@ -154,6 +157,16 @@ jobs:
             backend/*/target/site/jacoco/
             backend/*/target/jacoco.exec
           retention-days: 30
+
+      # 10. Subir reportes de tests (incluyendo errores)
+      - name: Upload test reports (surefire-reports)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-test-reports
+          path: |
+            backend/*/target/surefire-reports/
+          retention-days: 15
 
       # OPCIONAL: Integración con SonarCloud
       # Descomenta las siguientes líneas si deseas usar SonarCloud para análisis de código
