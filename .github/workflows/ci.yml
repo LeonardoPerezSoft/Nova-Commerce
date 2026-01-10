@@ -1,0 +1,133 @@
+name: NovaCommerce CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configuración de Java 17
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Cache de dependencias Maven
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # 4. Verificar estructura del monorepo
+      - name: Verify monorepo structure
+        run: |
+          echo "=== Microservicios encontrados ==="
+          ls -la backend/
+          echo ""
+          echo "=== Verificando pom.xml en cada servicio ==="
+          for service in backend/*/; do
+            if [ -f "$service/pom.xml" ]; then
+              echo "✓ $(basename $service)"
+            else
+              echo "✗ $(basename $service) - pom.xml NO ENCONTRADO"
+            fi
+          done
+
+      # 5. Build de todos los microservicios con Maven
+      - name: Build all microservices
+        run: |
+          echo "=== Iniciando compilación del monorepo ==="
+          mvn clean compile \
+            --file backend/pom.xml \
+            -DskipTests \
+            -B \
+            -V
+
+      # 6. Ejecución de tests unitarios con cobertura de código (JaCoCo)
+      - name: Run tests and generate JaCoCo coverage reports
+        run: |
+          echo "=== Ejecutando tests unitarios y generando reportes de cobertura ==="
+          mvn verify \
+            --file backend/pom.xml \
+            -B \
+            --fail-at-end
+
+      # 7. Verificar cobertura mínima (80%)
+      - name: Check JaCoCo coverage threshold
+        run: |
+          echo "=== Verificando umbral de cobertura (80%) ==="
+          
+          # Buscar archivos jacoco.exec y generar reporte agregado
+          find backend -name "jacoco.exec" -type f | while read file; do
+            echo "Encontrado: $file"
+          done
+          
+          # Nota: La validación del umbral se realiza durante 'mvn verify'
+          # Si la cobertura es menor al 80%, el build fallará automáticamente
+          echo "✓ Verificación de cobertura completada (validación integrada en pom.xml)"
+
+      # 8. Publicar resultados de tests
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/target/surefire-reports/*.xml'
+          check_name: Unit Test Results
+
+      # 9. Subir reportes de cobertura como artefactos
+      - name: Upload JaCoCo coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-reports
+          path: |
+            backend/*/target/site/jacoco/
+            backend/*/target/jacoco.exec
+          retention-days: 30
+
+      # OPCIONAL: Integración con SonarCloud
+      # Descomenta las siguientes líneas si deseas usar SonarCloud para análisis de código
+      #
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarcloud-github-action@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   with:
+      #     args: >
+      #       -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+      #       -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+      #       -Dsonar.sources=backend
+      #       -Dsonar.exclusions=backend/*/target/**,**/generated-sources/**
+      #       -Dsonar.coverage.jacoco.xmlReportPaths=backend/*/target/site/jacoco/jacoco.xml
+
+      # 10. Resumen del workflow
+      - name: Print build summary
+        if: always()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "         BUILD SUMMARY"
+          echo "=========================================="
+          echo "Job Status: ${{ job.status }}"
+          echo "Git Branch: ${{ github.ref }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "=========================================="
