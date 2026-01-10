@@ -87,13 +87,27 @@ jobs:
           else
             echo "❌ BUILD FAILED (Exit code: $exit_code)"
             echo ""
-            echo "Verificando causa del fallo..."
+            echo "=== Últimas líneas del error ==="
+            tail -50 maven-output.log | grep -E "FAILURE|ERROR|Failed to execute|Tests run:" || tail -30 maven-output.log
+            echo ""
+            echo "=== Causa identificada ==="
+            
             if grep -q "There are test failures" maven-output.log; then
               echo "⚠️  CAUSA: Tests unitarios fallaron"
+              echo ""
+              echo "Tests que fallaron:"
+              grep -A 5 "Failed tests:" maven-output.log || grep "Tests run:" maven-output.log | grep -v "Failures: 0"
             elif grep -q "Coverage checks have not been met" maven-output.log; then
               echo "⚠️  CAUSA: Cobertura de código menor al 80%"
+            elif grep -q "Failed to execute goal.*maven-surefire-plugin" maven-output.log; then
+              echo "⚠️  CAUSA: Error en ejecución de tests (Surefire plugin)"
+              echo ""
+              grep -B 2 -A 10 "Failed to execute goal.*maven-surefire-plugin" maven-output.log
             else
-              echo "⚠️  CAUSA: Error desconocido (revisar logs arriba)"
+              echo "⚠️  CAUSA: Error desconocido"
+              echo ""
+              echo "Contexto del error:"
+              grep -B 10 "BUILD FAILURE" maven-output.log | tail -25
             fi
           fi
           
