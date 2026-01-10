@@ -19,6 +19,13 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
+      SPRING_DATASOURCE_USERNAME: testuser
+      SPRING_DATASOURCE_PASSWORD: testpass
+      SPRING_PROFILES_ACTIVE: ci
+      JWT_SECRET: NovaCommerceCISecretKeyForJWTTokenValidationMustBeLongHS512
+      INTERNAL_API_KEY: nova-internal-service-key-2024
 
     services:
       postgres:
@@ -55,6 +62,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
+      # 3.1 Esperar a que PostgreSQL esté listo
+      - name: Wait for PostgreSQL readiness
+        run: |
+          echo "=== Esperando PostgreSQL en localhost:5432 ==="
+          timeout 60 bash -c 'until echo > /dev/tcp/127.0.0.1/5432; do echo "PostgreSQL aún no está listo..."; sleep 2; done'
+          echo "✓ PostgreSQL está listo"
 
       # 4. Verificar estructura del monorepo
       - name: Verify monorepo structure
