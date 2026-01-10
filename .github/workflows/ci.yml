@@ -176,6 +176,62 @@ jobs:
           check_name: Unit Test Results
           comment_mode: off
 
+      # 8.1 Publicar % de cobertura por microservicio
+      - name: Generate Coverage Summary by Microservice
+        if: success() || failure()
+        run: |
+          echo "## 📊 Cobertura de Código por Microservicio" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Microservicio | Instrucciones | Ramas | Líneas | Métodos | Clases |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------------|---------------|-------|---------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          
+          for service in backend/*/target/site/jacoco/jacoco.csv; do
+            if [ -f "$service" ]; then
+              service_name=$(echo $service | cut -d'/' -f2)
+              
+              # Leer totales desde el archivo CSV (última línea con INSTRUCTION_COVERED, etc)
+              coverage_line=$(tail -1 "$service")
+              
+              # Extraer columnas: INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED,CLASS_MISSED,CLASS_COVERED
+              inst_missed=$(echo $coverage_line | cut -d',' -f4)
+              inst_covered=$(echo $coverage_line | cut -d',' -f5)
+              branch_missed=$(echo $coverage_line | cut -d',' -f6)
+              branch_covered=$(echo $coverage_line | cut -d',' -f7)
+              line_missed=$(echo $coverage_line | cut -d',' -f8)
+              line_covered=$(echo $coverage_line | cut -d',' -f9)
+              method_missed=$(echo $coverage_line | cut -d',' -f12)
+              method_covered=$(echo $coverage_line | cut -d',' -f13)
+              class_missed=$(echo $coverage_line | cut -d',' -f14)
+              class_covered=$(echo $coverage_line | cut -d',' -f15)
+              
+              # Calcular porcentajes
+              inst_total=$((inst_missed + inst_covered))
+              branch_total=$((branch_missed + branch_covered))
+              line_total=$((line_missed + line_covered))
+              method_total=$((method_missed + method_covered))
+              class_total=$((class_missed + class_covered))
+              
+              inst_pct=0
+              branch_pct=0
+              line_pct=0
+              method_pct=0
+              class_pct=0
+              
+              [ $inst_total -gt 0 ] && inst_pct=$(awk "BEGIN {printf \"%.1f\", ($inst_covered/$inst_total)*100}")
+              [ $branch_total -gt 0 ] && branch_pct=$(awk "BEGIN {printf \"%.1f\", ($branch_covered/$branch_total)*100}")
+              [ $line_total -gt 0 ] && line_pct=$(awk "BEGIN {printf \"%.1f\", ($line_covered/$line_total)*100}")
+              [ $method_total -gt 0 ] && method_pct=$(awk "BEGIN {printf \"%.1f\", ($method_covered/$method_total)*100}")
+              [ $class_total -gt 0 ] && class_pct=$(awk "BEGIN {printf \"%.1f\", ($class_covered/$class_total)*100}")
+              
+              # Agregar fila a la tabla
+              echo "| **$service_name** | $inst_pct% | $branch_pct% | $line_pct% | $method_pct% | $class_pct% |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Umbral requerido:** 80% de cobertura" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
       # 9. Subir reportes de cobertura como artefactos
       - name: Upload JaCoCo coverage reports
         if: always()
@@ -213,7 +269,7 @@ jobs:
       #       -Dsonar.exclusions=backend/*/target/**,**/generated-sources/**
       #       -Dsonar.coverage.jacoco.xmlReportPaths=backend/*/target/site/jacoco/jacoco.xml
 
-      # 10. Resumen del workflow
+      # 11. Resumen del workflow
       - name: Print build summary
         if: always()
         run: |
