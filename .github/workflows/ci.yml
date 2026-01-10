@@ -10,10 +10,37 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
+      SPRING_DATASOURCE_USERNAME: testuser
+      SPRING_DATASOURCE_PASSWORD: testpass
+      SPRING_PROFILES_ACTIVE: ci
+      JWT_SECRET: NovaCommerceCISecretKeyForJWTTokenValidationMustBeLongHS512
+      INTERNAL_API_KEY: nova-internal-service-key-2024
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       # 1. Checkout del repositorio
@@ -35,6 +62,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
+      # 3.1 Esperar a que PostgreSQL esté listo
+      - name: Wait for PostgreSQL readiness
+        run: |
+          echo "=== Esperando PostgreSQL en localhost:5432 ==="
+          timeout 60 bash -c 'until echo > /dev/tcp/127.0.0.1/5432; do echo "PostgreSQL aún no está listo..."; sleep 2; done'
+          echo "✓ PostgreSQL está listo"
 
       # 4. Verificar estructura del monorepo
       - name: Verify monorepo structure
@@ -63,34 +97,144 @@ jobs:
 
       # 6. Ejecución de tests unitarios con cobertura de código (JaCoCo)
       - name: Run tests and generate JaCoCo coverage reports
+        continue-on-error: false
         run: |
           echo "=== Ejecutando tests unitarios y generando reportes de cobertura ==="
           mvn verify \
             --file backend/pom.xml \
             -B \
-            --fail-at-end
+            -e \
+            2>&1 | tee maven-output.log
+          
+          # Capturar el código de salida
+          exit_code=${PIPESTATUS[0]}
+          
+          echo ""
+          echo "=== Resumen de Ejecución ==="
+          if [ $exit_code -eq 0 ]; then
+            echo "✅ BUILD SUCCESS"
+          else
+            echo "❌ BUILD FAILED (Exit code: $exit_code)"
+            echo ""
+            echo "=== Últimas líneas del error ==="
+            tail -50 maven-output.log | grep -E "FAILURE|ERROR|Failed to execute|Tests run:" || tail -30 maven-output.log
+            echo ""
+            echo "=== Causa identificada ==="
+            
+            if grep -q "There are test failures" maven-output.log; then
+              echo "⚠️  CAUSA: Tests unitarios fallaron"
+              echo ""
+              echo "Tests que fallaron:"
+              grep -A 5 "Failed tests:" maven-output.log || grep "Tests run:" maven-output.log | grep -v "Failures: 0"
+            elif grep -q "Coverage checks have not been met" maven-output.log; then
+              echo "⚠️  CAUSA: Cobertura de código menor al 80%"
+            elif grep -q "Failed to execute goal.*maven-surefire-plugin" maven-output.log; then
+              echo "⚠️  CAUSA: Error en ejecución de tests (Surefire plugin)"
+              echo ""
+              grep -B 2 -A 10 "Failed to execute goal.*maven-surefire-plugin" maven-output.log
+              echo ""
+              echo "=== Detalles de errores en surefire-reports ==="
+              find backend -name "*.txt" -path "*/surefire-reports/*" -exec echo "Archivo: {}" \; -exec head -100 {} \; 2>/dev/null || echo "No se encontraron reportes detallados"
+            else
+              echo "⚠️  CAUSA: Error desconocido"
+              echo ""
+              echo "Contexto del error:"
+              grep -B 10 "BUILD FAILURE" maven-output.log | tail -25
+            fi
+          fi
+          
+          exit $exit_code
 
       # 7. Verificar cobertura mínima (80%)
       - name: Check JaCoCo coverage threshold
+        if: success() || failure()
         run: |
           echo "=== Verificando umbral de cobertura (80%) ==="
           
-          # Buscar archivos jacoco.exec y generar reporte agregado
+          # Contar tests ejecutados
+          echo "=== Resumen de Tests ==="
+          find backend -name "TEST-*.xml" -type f | wc -l | xargs echo "Archivos de test encontrados:"
+          
+          # Buscar archivos jacoco.exec
+          echo ""
+          echo "=== Reportes de Cobertura ==="
           find backend -name "jacoco.exec" -type f | while read file; do
-            echo "Encontrado: $file"
+            echo "✓ Encontrado: $file"
           done
           
           # Nota: La validación del umbral se realiza durante 'mvn verify'
           # Si la cobertura es menor al 80%, el build fallará automáticamente
+          echo ""
           echo "✓ Verificación de cobertura completada (validación integrada en pom.xml)"
 
       # 8. Publicar resultados de tests
       - name: Publish test results
-        if: always()
+        if: success() || failure()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          files: '**/target/surefire-reports/*.xml'
+          files: '**/target/surefire-reports/TEST-*.xml'
           check_name: Unit Test Results
+          comment_mode: off
+
+      # 8.1 Publicar % de cobertura por microservicio
+      - name: Generate Coverage Summary by Microservice
+        if: success() || failure()
+        run: |
+          echo "## 📊 Cobertura de Código por Microservicio" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Microservicio | Instrucciones | Ramas | Líneas | Métodos | Clases |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------------|---------------|-------|---------|---------|---------|" >> $GITHUB_STEP_SUMMARY
+          
+          for service in backend/*/target/site/jacoco/jacoco.csv; do
+            if [ -f "$service" ]; then
+              service_name=$(echo $service | cut -d'/' -f2)
+              
+              # Leer la línea de totales (última línea del CSV)
+              # Formato CSV JaCoCo: GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED,CLASS_MISSED,CLASS_COVERED
+              coverage_line=$(tail -1 "$service")
+              
+              # Debug: mostrar línea completa para diagnóstico
+              echo "DEBUG $service_name: $coverage_line"
+              
+              # Extraer columnas (índices 1-based para cut)
+              inst_missed=$(echo "$coverage_line" | cut -d',' -f4)
+              inst_covered=$(echo "$coverage_line" | cut -d',' -f5)
+              branch_missed=$(echo "$coverage_line" | cut -d',' -f6)
+              branch_covered=$(echo "$coverage_line" | cut -d',' -f7)
+              line_missed=$(echo "$coverage_line" | cut -d',' -f8)
+              line_covered=$(echo "$coverage_line" | cut -d',' -f9)
+              method_missed=$(echo "$coverage_line" | cut -d',' -f12)
+              method_covered=$(echo "$coverage_line" | cut -d',' -f13)
+              class_missed=$(echo "$coverage_line" | cut -d',' -f14)
+              class_covered=$(echo "$coverage_line" | cut -d',' -f15)
+              
+              # Calcular porcentajes con validación
+              inst_total=$((inst_missed + inst_covered))
+              branch_total=$((branch_missed + branch_covered))
+              line_total=$((line_missed + line_covered))
+              method_total=$((method_missed + method_covered))
+              class_total=$((class_missed + class_covered))
+              
+              inst_pct="N/A"
+              branch_pct="N/A"
+              line_pct="N/A"
+              method_pct="N/A"
+              class_pct="N/A"
+              
+              [ $inst_total -gt 0 ] && inst_pct=$(awk "BEGIN {printf \"%.1f\", ($inst_covered/$inst_total)*100}")"%"
+              [ $branch_total -gt 0 ] && branch_pct=$(awk "BEGIN {printf \"%.1f\", ($branch_covered/$branch_total)*100}")"%"
+              [ $line_total -gt 0 ] && line_pct=$(awk "BEGIN {printf \"%.1f\", ($line_covered/$line_total)*100}")"%"
+              [ $method_total -gt 0 ] && method_pct=$(awk "BEGIN {printf \"%.1f\", ($method_covered/$method_total)*100}")"%"
+              [ $class_total -gt 0 ] && class_pct=$(awk "BEGIN {printf \"%.1f\", ($class_covered/$class_total)*100}")"%"
+              
+              # Agregar fila a la tabla
+              echo "| **$service_name** | $inst_pct | $branch_pct | $line_pct | $method_pct | $class_pct |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Umbral requerido:** 80% de cobertura" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
       # 9. Subir reportes de cobertura como artefactos
       - name: Upload JaCoCo coverage reports
@@ -102,6 +246,16 @@ jobs:
             backend/*/target/site/jacoco/
             backend/*/target/jacoco.exec
           retention-days: 30
+
+      # 10. Subir reportes de tests (incluyendo errores)
+      - name: Upload test reports (surefire-reports)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-test-reports
+          path: |
+            backend/*/target/surefire-reports/
+          retention-days: 15
 
       # OPCIONAL: Integración con SonarCloud
       # Descomenta las siguientes líneas si deseas usar SonarCloud para análisis de código
@@ -119,7 +273,7 @@ jobs:
       #       -Dsonar.exclusions=backend/*/target/**,**/generated-sources/**
       #       -Dsonar.coverage.jacoco.xmlReportPaths=backend/*/target/site/jacoco/jacoco.xml
 
-      # 10. Resumen del workflow
+      # 11. Resumen del workflow
       - name: Print build summary
         if: always()
         run: |
