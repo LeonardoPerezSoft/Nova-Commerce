@@ -10,6 +10,11 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     name: Build and Test
@@ -63,34 +68,67 @@ jobs:
 
       # 6. Ejecución de tests unitarios con cobertura de código (JaCoCo)
       - name: Run tests and generate JaCoCo coverage reports
+        continue-on-error: false
         run: |
           echo "=== Ejecutando tests unitarios y generando reportes de cobertura ==="
           mvn verify \
             --file backend/pom.xml \
             -B \
-            --fail-at-end
+            -e \
+            2>&1 | tee maven-output.log
+          
+          # Capturar el código de salida
+          exit_code=${PIPESTATUS[0]}
+          
+          echo ""
+          echo "=== Resumen de Ejecución ==="
+          if [ $exit_code -eq 0 ]; then
+            echo "✅ BUILD SUCCESS"
+          else
+            echo "❌ BUILD FAILED (Exit code: $exit_code)"
+            echo ""
+            echo "Verificando causa del fallo..."
+            if grep -q "There are test failures" maven-output.log; then
+              echo "⚠️  CAUSA: Tests unitarios fallaron"
+            elif grep -q "Coverage checks have not been met" maven-output.log; then
+              echo "⚠️  CAUSA: Cobertura de código menor al 80%"
+            else
+              echo "⚠️  CAUSA: Error desconocido (revisar logs arriba)"
+            fi
+          fi
+          
+          exit $exit_code
 
       # 7. Verificar cobertura mínima (80%)
       - name: Check JaCoCo coverage threshold
+        if: success() || failure()
         run: |
           echo "=== Verificando umbral de cobertura (80%) ==="
           
-          # Buscar archivos jacoco.exec y generar reporte agregado
+          # Contar tests ejecutados
+          echo "=== Resumen de Tests ==="
+          find backend -name "TEST-*.xml" -type f | wc -l | xargs echo "Archivos de test encontrados:"
+          
+          # Buscar archivos jacoco.exec
+          echo ""
+          echo "=== Reportes de Cobertura ==="
           find backend -name "jacoco.exec" -type f | while read file; do
-            echo "Encontrado: $file"
+            echo "✓ Encontrado: $file"
           done
           
           # Nota: La validación del umbral se realiza durante 'mvn verify'
           # Si la cobertura es menor al 80%, el build fallará automáticamente
+          echo ""
           echo "✓ Verificación de cobertura completada (validación integrada en pom.xml)"
 
       # 8. Publicar resultados de tests
       - name: Publish test results
-        if: always()
+        if: success() || failure()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          files: '**/target/surefire-reports/*.xml'
+          files: '**/target/surefire-reports/TEST-*.xml'
           check_name: Unit Test Results
+          comment_mode: off
 
       # 9. Subir reportes de cobertura como artefactos
       - name: Upload JaCoCo coverage reports
