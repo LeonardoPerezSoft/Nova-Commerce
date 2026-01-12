@@ -6,6 +6,7 @@ import com.novacommerce.product_service.repository.entity.ProductEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 
@@ -20,7 +21,8 @@ class ProductEntityMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new ProductEntityMapperImpl();
+        // Utiliza implementación generada por MapStruct sin contexto de Spring
+        mapper = Mappers.getMapper(ProductEntityMapper.class);
         
         productEntity = ProductEntity.builder()
                 .id(1L)

@@ -8,19 +8,20 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+/**
+ * DTO público para mostrar productos en el home.
+ * No expone campos internos como categoryId.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductResponse {
+public class PublicProductResponse {
     
     private Long id;
     private String name;
     private String description;
     private BigDecimal price;
     private ProductType productType;
-    private Long categoryId;
-    private Integer stockQuantity;
-    private String status;
     private String imageUrl;
 }

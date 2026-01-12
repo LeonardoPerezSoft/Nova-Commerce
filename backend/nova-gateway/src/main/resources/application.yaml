@@ -48,9 +48,17 @@ gateway:
       uri: http://localhost:8083
       path: /api/products/**
 
+    product-service-images:
+      uri: http://localhost:8083
+      path: /images/**
+
     product-service-categories:
       uri: http://localhost:8083
       path: /api/categories/**
+
+    product-service-public:
+      uri: http://localhost:8083
+      path: /api/public/products/**
 
     customer-service-customers:
       uri: http://localhost:8084
@@ -63,6 +71,8 @@ gateway:
   public-paths:
     - /api/auth/login
     - /api/auth/refresh
+    - /api/public/**
+    - /images/**
     - /swagger-ui/**
     - /v3/api-docs/**
 

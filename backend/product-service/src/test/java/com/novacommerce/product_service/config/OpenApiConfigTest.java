@@ -14,6 +14,7 @@ class OpenApiConfigTest {
 
     @Autowired
     private ApplicationContext applicationContext;
+    private com.novacommerce.product_service.repository.mapper.ProductEntityMapper productEntityMapper;
 
     @Test
     @DisplayName("Should load application context for OpenAPI config")

@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/liquibase/changes/002-create-product-table.yaml
   - include:
       file: db/liquibase/changes/003-seed-initial-data.yaml
+  - include:
+      file: db/liquibase/changes/004-add-image-url-to-products.yaml

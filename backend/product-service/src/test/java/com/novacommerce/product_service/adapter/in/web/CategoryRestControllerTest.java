@@ -46,6 +46,10 @@ class CategoryRestControllerTest {
     @MockBean
     private CategoryDtoMapper categoryDtoMapper;
 
+        // Evitar la creación del bean real de ProductEntityMapper durante el contexto
+        @MockBean(name = "productEntityMapperImpl")
+        private com.novacommerce.product_service.repository.mapper.ProductEntityMapper productEntityMapper;
+
     private Category category;
     private CategoryResponse categoryResponse;
 

@@ -42,6 +42,12 @@ public class GatewayConfig {
     @Value("${gateway.routes.product-service-categories.path}")
     private String productServiceCategoriesPath;
 
+    @Value("${gateway.routes.product-service-public.path}")
+    private String productServicePublicPath;
+
+    @Value("${gateway.routes.product-service-images.path:}")
+    private String productServiceImagesPath;
+
     @Value("${gateway.routes.customer-service-customers.uri}")
     private String customerServiceUri;
 
@@ -62,6 +68,8 @@ public class GatewayConfig {
         log.info("Route: {} -> {}", userServiceRolesPath, userServiceUri);
         log.info("Route: {} -> {}", productServiceProductsPath, productServiceUri);
         log.info("Route: {} -> {}", productServiceCategoriesPath, productServiceUri);
+        log.info("Route: {} -> {}", productServicePublicPath, productServiceUri);
+        log.info("Route: {} -> {}", productServiceImagesPath, productServiceUri);
         log.info("Route: {} -> {}", customerServiceCustomersPath, customerServiceUri);
         log.info("Route: {} -> {}", orderServiceOrdersPath, orderServiceUri);
 
@@ -92,6 +100,18 @@ public class GatewayConfig {
                         .uri(productServiceUri))
                 .route("product-service-categories", r -> r
                         .path(productServiceCategoriesPath)
+                        .filters(f -> f
+                                .stripPrefix(0)
+                                .removeRequestHeader("Cookie"))
+                        .uri(productServiceUri))
+                .route("product-service-public", r -> r
+                        .path(productServicePublicPath)
+                        .filters(f -> f
+                                .stripPrefix(0)
+                                .removeRequestHeader("Cookie"))
+                        .uri(productServiceUri))
+                .route("product-service-images", r -> r
+                        .path(productServiceImagesPath)
                         .filters(f -> f
                                 .stripPrefix(0)
                                 .removeRequestHeader("Cookie"))

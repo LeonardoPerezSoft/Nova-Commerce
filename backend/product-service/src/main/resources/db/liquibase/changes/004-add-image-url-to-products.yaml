@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-add-image-url-to-products
+      author: product-service
+      changes:
+        - addColumn:
+            tableName: products
+            columns:
+              - column:
+                  name: image_url
+                  type: varchar(500)
+                  constraints:
+                    nullable: true
+      rollback:
+        - dropColumn:
+            tableName: products
+            columnName: image_url

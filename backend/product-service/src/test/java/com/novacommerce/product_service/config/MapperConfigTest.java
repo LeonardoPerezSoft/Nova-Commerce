@@ -32,6 +32,9 @@ class MapperConfigTest {
     @Autowired(required = false)
     private CategoryEntityMapper categoryEntityMapper;
 
+    @org.springframework.boot.test.mock.mockito.MockBean(name = "productEntityMapperImpl")
+    private ProductEntityMapper mockedProductEntityMapper;
+
     @Test
     @DisplayName("Should load MapperConfig as Configuration")
     void testMapperConfigIsConfiguration() {

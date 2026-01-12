@@ -26,6 +26,10 @@ class GlobalExceptionHandlerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    // Evitar que el contexto intente instanciar el mapper real
+    @org.springframework.boot.test.mock.mockito.MockBean(name = "productEntityMapperImpl")
+    private com.novacommerce.product_service.repository.mapper.ProductEntityMapper productEntityMapper;
+
     @Test
     @DisplayName("Should handle ResourceNotFoundException")
     @WithMockUser(roles = "ADMIN")
