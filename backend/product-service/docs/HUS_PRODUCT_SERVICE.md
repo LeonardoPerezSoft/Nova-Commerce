@@ -623,6 +623,259 @@ Como sistema de seguridad, Quiero validar que las APIs internas incluyan una API
 
 ---
 
+## Feature FT-PROD-007 - API Pública para Frontend
+
+### US-PROD-021: Obtener productos aleatorios para home page
+
+**Descripción:**  
+Como usuario anónimo visitando la página principal, Quiero ver una selección aleatoria de productos destacados, Para descubrir productos disponibles sin necesidad de autenticación.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario anónimo accede a la página principal |
+| **Cuando** | Se invoca GET /public/products?limit=12 sin autenticación |
+| **Entonces** | Retorna HTTP 200 con una lista de hasta 12 productos aleatorios en orden aleatorio, sin requerir JWT ni credenciales |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Operación totalmente independiente, sin autenticación
+- **N (Negotiable):** Límite de productos y campos incluidos son negociables
+- **V (Valuable):** Mejora la experiencia del usuario no autenticado y aumenta conversión
+- **E (Estimable):** Bien definido y estimable
+- **S (Small):** Operación simple de consulta
+- **T (Testeable):** Fácilmente testeable mediante tests de integración
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-PROD-007 - API Pública para Frontend
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-007
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-022: Validar parámetro de límite en API pública
+
+**Descripción:**  
+Como sistema de rendimiento, Quiero limitar la cantidad de productos retornados en la API pública, Para evitar sobrecarga del servidor.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un cliente solicita productos para la home page |
+| **Cuando** | Se invoca GET /public/products con limit > 100 |
+| **Entonces** | El sistema retorna máximo 100 productos, ignorando valores superiores |
+| **Y** | Si limit <= 0, retorna HTTP 400 Bad Request |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Validación independiente
+- **N (Negotiable):** Límite máximo es negociable
+- **V (Valuable):** Protege recursos del servidor
+- **E (Estimable):** Simple de estimar
+- **S (Small):** Muy pequeño
+- **T (Testeable):** Fácilmente testeable
+
+**Metadatos:**
+- **Prioridad:** Media
+- **Feature:** FT-PROD-007
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-021
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+## Feature FT-PROD-008 - Gestión de Imágenes de Productos
+
+### US-PROD-023: Subir imagen para producto existente
+
+**Descripción:**  
+Como administrador del catálogo, Quiero subir una imagen para un producto, Para que los clientes puedan visualizar el artículo.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN con un producto existente |
+| **Cuando** | Se invoca POST /api/products/{id}/image con multipart/form-data conteniendo archivo de imagen válido (JPEG, PNG, WebP) |
+| **Entonces** | La imagen se almacena en el sistema de archivos, se actualiza el campo imageUrl del producto, y retorna HTTP 200 con la URL de la imagen |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Operación aislada de subida de archivo
+- **N (Negotiable):** Formatos soportados y ubicación de almacenamiento son negociables
+- **V (Valuable):** Permite visualización de productos, esencial para e-commerce
+- **E (Estimable):** Bien definido
+- **S (Small):** Operación única de upload
+- **T (Testeable):** Testeable mediante MockMultipartFile
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-PROD-008 - Gestión de Imágenes de Productos
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-008
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-024: Rechazar imagen con formato inválido
+
+**Descripción:**  
+Como sistema de validación, Quiero rechazar archivos que no sean imágenes válidas, Para mantener la integridad del catálogo visual.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN intenta subir un archivo con content-type no soportado (ej: application/pdf, text/plain) |
+| **Cuando** | Se invoca POST /api/products/{id}/image con archivo inválido |
+| **Entonces** | Se rechaza con HTTP 400 Bad Request y mensaje indicando "Invalid content type" |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Validación aislada
+- **N (Negotiable):** Formatos permitidos son negociables
+- **V (Valuable):** Previene errores en el catálogo
+- **E (Estimable):** Simple de estimar
+- **S (Small):** Validación simple
+- **T (Testeable):** Fácilmente testeable
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-PROD-008
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-023
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-025: Rechazar imagen que excede tamaño máximo
+
+**Descripción:**  
+Como sistema de rendimiento, Quiero limitar el tamaño de las imágenes subidas, Para optimizar almacenamiento y rendimiento.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN intenta subir una imagen que excede 10MB |
+| **Cuando** | Se invoca POST /api/products/{id}/image con archivo > 10MB |
+| **Entonces** | Se rechaza con HTTP 400 Bad Request y mensaje indicando "File size exceeds maximum" |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Validación independiente
+- **N (Negotiable):** Tamaño máximo es configurable
+- **V (Valuable):** Optimiza recursos del servidor
+- **E (Estimable):** Trivial de estimar
+- **S (Small):** Validación simple
+- **T (Testeable):** Fácilmente testeable
+
+**Metadatos:**
+- **Prioridad:** Media
+- **Feature:** FT-PROD-008
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-023
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-026: Eliminar imagen de producto
+
+**Descripción:**  
+Como administrador del catálogo, Quiero eliminar la imagen de un producto, Para actualizar o remover imágenes obsoletas.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN y un producto con imagen existente |
+| **Cuando** | Se invoca DELETE /api/products/{id}/image |
+| **Entonces** | La imagen se elimina del sistema de archivos, el campo imageUrl del producto se actualiza a null, y retorna HTTP 204 No Content |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Operación aislada
+- **N (Negotiable):** Política de eliminación física vs lógica negociable
+- **V (Valuable):** Gestión completa del ciclo de vida de imágenes
+- **E (Estimable):** Bien definido
+- **S (Small):** Operación simple
+- **T (Testeable):** Fácilmente testeable
+
+**Metadatos:**
+- **Prioridad:** Media
+- **Feature:** FT-PROD-008
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-023
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-027: Rechazar subida de imagen sin archivo
+
+**Descripción:**  
+Como sistema de validación, Quiero rechazar solicitudes de upload sin archivo adjunto, Para evitar errores de procesamiento.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN intenta subir imagen sin archivo o con archivo vacío |
+| **Cuando** | Se invoca POST /api/products/{id}/image sin parte "file" o con archivo vacío |
+| **Entonces** | Se rechaza con HTTP 400 Bad Request y mensaje indicando "Image file is null or empty" |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Validación independiente
+- **N (Negotiable):** Mensaje de error negociable
+- **V (Valuable):** Previene errores
+- **E (Estimable):** Trivial
+- **S (Small):** Muy pequeño
+- **T (Testeable):** Trivial testeable
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-PROD-008
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-023
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
+### US-PROD-028: Rechazar subida de imagen para producto inexistente
+
+**Descripción:**  
+Como sistema de validación, Quiero rechazar la subida de imágenes para productos que no existen, Para mantener integridad referencial.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un usuario ADMIN intenta subir imagen para un producto con ID que no existe |
+| **Cuando** | Se invoca POST /api/products/{invalidId}/image |
+| **Entonces** | Se rechaza con HTTP 404 Not Found y mensaje indicando "Product not found" |
+
+**Criterios de Inversión (INVEST):**
+- **I (Independent):** Validación aislada
+- **N (Negotiable):** Mensaje de error negociable
+- **V (Valuable):** Previene datos huérfanos
+- **E (Estimable):** Simple
+- **S (Small):** Muy pequeño
+- **T (Testeable):** Fácilmente testeable
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-PROD-008
+- **Épica:** EP-PROD-001
+- **Dependencias:** US-PROD-023
+- **Versión/Release:** 1.0
+- **Estado:** Completado
+
+---
+
 ## Resumen de Historias de Usuario
 
 | ID | Nombre | Prioridad | Estado | Feature |
@@ -647,6 +900,14 @@ Como sistema de seguridad, Quiero validar que las APIs internas incluyan una API
 | US-PROD-018 | Eliminar categoría | Media | Pendiente | FT-PROD-005 |
 | US-PROD-019 | API interna productos | Media | Pendiente | FT-PROD-006 |
 | US-PROD-020 | Validar API key interno | Alta | Pendiente | FT-PROD-006 |
+| US-PROD-021 | Productos aleatorios home | Alta | Completado | FT-PROD-007 |
+| US-PROD-022 | Validar límite API pública | Media | Completado | FT-PROD-007 |
+| US-PROD-023 | Subir imagen producto | Alta | Completado | FT-PROD-008 |
+| US-PROD-024 | Rechazar formato inválido | Alta | Completado | FT-PROD-008 |
+| US-PROD-025 | Rechazar imagen grande | Media | Completado | FT-PROD-008 |
+| US-PROD-026 | Eliminar imagen producto | Media | Completado | FT-PROD-008 |
+| US-PROD-027 | Rechazar upload sin archivo | Alta | Completado | FT-PROD-008 |
+| US-PROD-028 | Rechazar imagen producto inexistente | Alta | Completado | FT-PROD-008 |
 
 ---
 
@@ -665,13 +926,15 @@ Todas las historias de usuario en este documento siguen los principios INVEST:
 
 ## Estado General del Proyecto
 
-**Versión del Documento:** 1.0  
-**Última Actualización:** 2026-01-08  
-**Total de Historias de Usuario:** 20  
+**Versión del Documento:** 1.1  
+**Última Actualización:** 2026-01-12  
+**Total de Historias de Usuario:** 28  
 **Épicas:** 2  
-**Features:** 6  
+**Features:** 8  
+**Historias Completadas:** 8 (US-PROD-021 a US-PROD-028)  
 
 **Roadmap:**
-- **Release 1.0:** Todas las funcionalidades básicas (US-PROD-001 a US-PROD-020)
-- **Release 1.1:** Optimizaciones y features avanzadas (Por definir)
+- **Release 1.0:** Funcionalidades básicas de CRUD (US-PROD-001 a US-PROD-020)
+- **Release 1.1:** API pública y gestión de imágenes ✅ **Completado** (US-PROD-021 a US-PROD-028)
+- **Release 1.2:** Optimizaciones y features avanzadas (Por definir)
 

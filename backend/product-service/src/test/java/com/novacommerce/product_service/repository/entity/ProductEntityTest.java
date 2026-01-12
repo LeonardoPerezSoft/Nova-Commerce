@@ -114,7 +114,7 @@ class ProductEntityTest {
     void testAllArgsConstructor() {
         ProductEntity entity = new ProductEntity(
                 5L, "Keyboard", "Mechanical", new BigDecimal("150.00"),
-                ProductType.PHYSICAL, 3L, 25, "ACTIVE"
+                ProductType.PHYSICAL, 3L, 25, "ACTIVE", "http://localhost:8083/images/products/5/test.jpg"
         );
         assertEquals(5L, entity.getId());
         assertEquals("Keyboard", entity.getName());

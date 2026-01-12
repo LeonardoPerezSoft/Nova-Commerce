@@ -7,6 +7,11 @@ spring:
     description: Servicio de gestión de productos para Nova Commerce
     version: 1.0.0
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
@@ -42,7 +47,6 @@ app:
     name: ${APP_CONTACT_NAME:Nova Commerce}
     email: ${APP_CONTACT_EMAIL:yesid.perez@sofka.com.co}
     url: ${APP_CONTACT_URL:https://novacomerce.com}
-
   # Configuración de seed de datos iniciales
   seed:
     enabled: ${SEED_ENABLED:true}

@@ -5,20 +5,23 @@ import com.novacommerce.product_service.repository.entity.CategoryEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 @DisplayName("CategoryEntityMapper Tests")
 class CategoryEntityMapperTest {
 
-    private CategoryEntityMapperImpl mapper;
+    @Autowired
+    private CategoryEntityMapper mapper;
     private CategoryEntity categoryEntity;
     private Category category;
 
     @BeforeEach
     void setUp() {
-        // After mvn compile, MapStruct generates CategoryEntityMapperImpl
-        mapper = new CategoryEntityMapperImpl();
         
         categoryEntity = CategoryEntity.builder()
                 .id(1L)

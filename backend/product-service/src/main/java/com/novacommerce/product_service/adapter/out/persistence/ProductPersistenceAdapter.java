@@ -9,7 +9,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -51,5 +53,13 @@ public class ProductPersistenceAdapter implements ProductPersistencePort {
     @Override
     public boolean existsById(Long id) {
         return productRepository.existsById(id);
+    }
+
+    @Override
+    public List<Product> findActiveProductsWithStockRandomOrder(int limit) {
+        return productRepository.findActiveProductsWithStockRandomOrder("ACTIVE", 0, limit)
+                .stream()
+                .map(productEntityMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

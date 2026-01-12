@@ -20,4 +20,5 @@ public class Product {
     private Long categoryId;
     private Integer stockQuantity;
     private String status;
+    private String imageUrl;
 }
