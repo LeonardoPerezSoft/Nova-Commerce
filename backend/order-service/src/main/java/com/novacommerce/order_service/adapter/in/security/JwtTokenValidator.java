@@ -62,22 +62,37 @@ public class JwtTokenValidator {
             return (List<String>) authoritiesObj;
         }
         
-        // Si es una String (JSON array o lista simple), parsearla
+        // Si es una String, parsearla
         if (authoritiesObj instanceof String) {
-            String authStr = (String) authoritiesObj;
-            // Si contiene "[" es un JSON array, parsearlo manualmente
+            String authStr = ((String) authoritiesObj).trim();
+            if (authStr.isEmpty()) {
+                return List.of();
+            }
+            
+            // Si comienza con "[", es un JSON array, parsearlo
             if (authStr.startsWith("[")) {
                 try {
-                    return List.of(authStr.replace("[", "")
+                    // Remover corchetes y comillas para obtener la lista
+                    authStr = authStr.replace("[", "")
                             .replace("]", "")
-                            .replace("\"", "")
-                            .split(","));
+                            .replace("\"", "");
+                    
+                    return List.of(authStr.split(","))
+                            .stream()
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .collect(java.util.stream.Collectors.toList());
                 } catch (Exception e) {
                     return List.of();
                 }
             }
-            // Si es una string simple, devolverla en una lista
-            return List.of(authStr);
+            
+            // Si no comienza con "[", es una cadena separada por comas
+            return List.of(authStr.split(","))
+                    .stream()
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(java.util.stream.Collectors.toList());
         }
         
         return List.of();
