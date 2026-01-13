@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-customer-id-to-users-006
+      author: user-service
+      objectQuotingStrategy: QUOTE_ALL_OBJECTS
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: customer_id
+                  type: bigint
+                  remarks: 'ID del cliente asociado al usuario (referencia a customer-service)'
+                  constraints:
+                    nullable: true
+        - createIndex:
+            tableName: users
+            indexName: idx_users_customer_id
+            columns:
+              - column:
+                  name: customer_id
+      rollback:
+        - dropIndex:
+            tableName: users
+            indexName: idx_users_customer_id
+        - dropColumn:
+            tableName: users
+            columnName: customer_id

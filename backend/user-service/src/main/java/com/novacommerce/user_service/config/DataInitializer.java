@@ -181,20 +181,22 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-     * Crea el rol USER básico.
+     * Crea el rol USER básico con permisos de lectura.
      */
     private void createUserRole() {
         String roleName = "USER";
 
         if (roleRepository.findByName(roleName).isEmpty()) {
+            Set<Permission> permissions = findPermissionsByNames("USER_READ");
+            
             Role userRole = Role.builder()
                 .name(roleName)
-                .description("Usuario estándar del sistema")
-                .permissions(new HashSet<>())
+                .description("Usuario estándar del sistema con acceso de lectura")
+                .permissions(permissions)
                 .build();
 
             roleRepository.save(userRole);
-            log.info("✓ Rol creado: {} sin permisos especiales", roleName);
+            log.info("✓ Rol creado: {} con {} permisos", roleName, permissions.size());
         } else {
             log.info("○ Rol ya existe: {}", roleName);
         }

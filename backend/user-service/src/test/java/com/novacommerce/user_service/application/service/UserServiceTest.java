@@ -87,6 +87,7 @@ class UserServiceTest {
                 user.getStatus().name(),
                 user.getEnabled(),
                 user.getLocked(),
+                null,
                 new HashSet<>(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
@@ -99,7 +100,8 @@ class UserServiceTest {
                 "testuser",
                 "test@example.com",
                 "password123",
-                roleIds
+                roleIds,
+                null
         );
     }
 
@@ -198,7 +200,8 @@ class UserServiceTest {
                 "updateduser",
                 "updated@example.com",
                 "newpassword",
-                new HashSet<>(Set.of(role.getId()))
+                new HashSet<>(Set.of(role.getId())),
+                null
         );
 
         when(userPersistencePort.findById(userId)).thenReturn(Optional.of(user));
@@ -278,12 +281,21 @@ class UserServiceTest {
                 "testuser",
                 "test@example.com",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
+
+        Role userRole = Role.builder()
+                .id(UUID.randomUUID())
+                .name("USER")
+                .description("User role")
+                .permissions(new HashSet<>())
+                .build();
 
         when(userPersistencePort.existsByUsername(anyString())).thenReturn(false);
         when(userPersistencePort.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoderPort.encode(anyString())).thenReturn("encryptedPassword");
+        when(rolePersistencePort.findByName("USER")).thenReturn(Optional.of(userRole));
         when(userPersistencePort.save(any(User.class))).thenReturn(user);
         when(userMapper.userToUserResponse(any(User.class))).thenReturn(userResponse);
 

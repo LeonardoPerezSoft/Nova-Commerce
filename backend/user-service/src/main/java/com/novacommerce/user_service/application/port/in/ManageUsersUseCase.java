@@ -37,6 +37,11 @@ public interface ManageUsersUseCase {
      * Elimina un usuario.
      */
     void deleteUser(UUID id);
+    
+    /**
+     * Actualiza el customerId de un usuario.
+     */
+    void updateCustomerId(UUID userId, Long customerId);
 
     /**
      * Verifica si un usuario es el usuario actual autenticado.

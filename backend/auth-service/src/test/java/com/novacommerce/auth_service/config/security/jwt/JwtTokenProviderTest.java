@@ -46,7 +46,7 @@ class JwtTokenProviderTest {
         Authentication authentication = createAuthentication("testuser", "ROLE_ADMIN,ROLE_USER");
 
         // When
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // Then
         assertNotNull(token);
@@ -75,7 +75,7 @@ class JwtTokenProviderTest {
         // Given
         String username = "testuser";
         Authentication authentication = createAuthentication(username, "ROLE_ADMIN");
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // When
         String extractedUsername = jwtTokenProvider.getUsernameFromToken(token);
@@ -90,7 +90,7 @@ class JwtTokenProviderTest {
     void testGetAuthoritiesFromToken() {
         // Given
         Authentication authentication = createAuthentication("testuser", "ROLE_ADMIN,ROLE_USER");
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // When
         String authorities = jwtTokenProvider.getAuthoritiesFromToken(token);
@@ -106,7 +106,7 @@ class JwtTokenProviderTest {
     void testValidateToken() {
         // Given
         Authentication authentication = createAuthentication("testuser", "ROLE_ADMIN");
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // When
         boolean isValid = jwtTokenProvider.validateToken(token);
@@ -147,7 +147,7 @@ class JwtTokenProviderTest {
         // Given - Create an expired token
         ReflectionTestUtils.setField(jwtTokenProvider, "jwtExpirationMs", -1000L);
         Authentication authentication = createAuthentication("testuser", "ROLE_ADMIN");
-        String expiredToken = jwtTokenProvider.generateToken(authentication);
+        String expiredToken = jwtTokenProvider.generateToken(authentication, null);
         
         // Reset expiration for later tests
         ReflectionTestUtils.setField(jwtTokenProvider, "jwtExpirationMs", jwtExpirationMs);
@@ -201,7 +201,7 @@ class JwtTokenProviderTest {
     void testGetAuthoritiesFromTokenEmpty() {
         // Given
         Authentication authentication = createAuthentication("testuser", "");
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // When
         String authorities = jwtTokenProvider.getAuthoritiesFromToken(token);
@@ -219,8 +219,8 @@ class JwtTokenProviderTest {
         Authentication auth2 = createAuthentication("user2", "ROLE_USER");
 
         // When
-        String token1 = jwtTokenProvider.generateToken(auth1);
-        String token2 = jwtTokenProvider.generateToken(auth2);
+        String token1 = jwtTokenProvider.generateToken(auth1, null);
+        String token2 = jwtTokenProvider.generateToken(auth2, null);
 
         // Then
         assertNotEquals(token1, token2);
@@ -239,7 +239,7 @@ class JwtTokenProviderTest {
         Authentication authentication = createAuthentication("testuser", "ROLE_ADMIN");
 
         // When
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // Then
         assertNotNull(token);
@@ -256,7 +256,7 @@ class JwtTokenProviderTest {
         Authentication authentication = createAuthentication("testuser", "ROLE_USER");
 
         // When
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // Then
         assertNotNull(token);
@@ -270,7 +270,7 @@ class JwtTokenProviderTest {
         // Given
         String authorities = "ROLE_ADMIN,ROLE_MANAGER,ROLE_USER";
         Authentication authentication = createAuthentication("testuser", authorities);
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(authentication, null);
 
         // When
         String extractedAuthorities = jwtTokenProvider.getAuthoritiesFromToken(token);
@@ -331,3 +331,4 @@ class JwtTokenProviderTest {
         };
     }
 }
+

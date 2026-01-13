@@ -17,8 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * Servicio de aplicación que implementa el caso de uso de registro público.
  * Orquesta la creación de usuario y cliente de forma sincrónica.
@@ -37,9 +35,6 @@ public class RegistrationService implements RegisterClientUseCase {
     private final UserServiceFeignClient userServiceClient;
     private final CustomerServiceFeignClient customerServiceClient;
 
-    @Value("${app.client-role-id:80c97308-f6e5-42a4-9b7f-1df83b299f4f}")
-    private String clientRoleId;
-
     @Value("${app.jwt.internal-api-key:nova-internal-service-key-2024}")
     private String internalApiKey;
 
@@ -47,7 +42,7 @@ public class RegistrationService implements RegisterClientUseCase {
      * Registra un nuevo cliente creando usuario y cliente de forma sincrónica.
      * 
      * Flujo:
-     * 1. Crea Usuario en User-Service con rol CLIENT
+     * 1. Crea Usuario en User-Service con rol USER
      * 2. Crea Cliente en Customer-Service con nivel BRONZE
      * 3. Retorna información combinada
      * 
@@ -63,11 +58,12 @@ public class RegistrationService implements RegisterClientUseCase {
         
         try {
             // Paso 1: Crear usuario en user-service
+            // No especificamos roleIds, User-Service asignará rol USER por defecto
             CreateUserRequest userRequest = CreateUserRequest.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(request.getPassword())
-                .roleIds(List.of(clientRoleId))
+                .roleIds(null)
                 .build();
 
             log.debug("Creando usuario: {}", request.getEmail());
@@ -88,7 +84,11 @@ public class RegistrationService implements RegisterClientUseCase {
             CreateCustomerResponse customerResponse = customerServiceClient.createCustomer(internalApiKey, customerRequest);
             log.info("Cliente creado exitosamente: {} (ID: {})", request.getEmail(), customerResponse.getId());
 
-            // Paso 3: Construir respuesta
+            // Paso 3: Actualizar usuario con customerId
+            userServiceClient.updateCustomerId(internalApiKey, userResponse.getId(), customerResponse.getId());
+            log.info("CustomerId {} asociado al usuario {}", customerResponse.getId(), userResponse.getId());
+
+            // Paso 4: Construir respuesta
             RegisterResponse response = RegisterResponse.builder()
                 .userId(userResponse.getId())
                 .customerId(customerResponse.getId())

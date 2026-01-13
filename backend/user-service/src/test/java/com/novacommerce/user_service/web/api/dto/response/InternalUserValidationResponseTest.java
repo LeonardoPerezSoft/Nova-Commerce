@@ -209,6 +209,7 @@ class InternalUserValidationResponseTest {
                 "test@example.com",
                 true,
                 false,
+                null,
                 roles,
                 permissions
         );

@@ -35,7 +35,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "password123",
-                roleIds
+                roleIds,
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -49,7 +50,8 @@ class CreateUserRequestTest {
                 "",
                 "test@example.com",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -65,7 +67,8 @@ class CreateUserRequestTest {
                 "ab",
                 "test@example.com",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -80,7 +83,8 @@ class CreateUserRequestTest {
                 longUsername,
                 "test@example.com",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -94,7 +98,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -108,7 +113,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "invalid-email",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -124,7 +130,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -138,7 +145,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "pass",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -154,6 +162,7 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "password123",
+                null,
                 null
         );
 
@@ -168,7 +177,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "password123",
-                new HashSet<>()
+                new HashSet<>(),
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);
@@ -187,7 +197,8 @@ class CreateUserRequestTest {
                 "testuser",
                 "test@example.com",
                 "password123",
-                roleIds
+                roleIds,
+                null
         );
 
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(request);

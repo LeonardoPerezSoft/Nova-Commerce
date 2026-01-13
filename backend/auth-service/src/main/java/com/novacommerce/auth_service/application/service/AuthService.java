@@ -81,7 +81,7 @@ public class AuthService implements AuthenticateUserUseCase, RefreshTokenUseCase
 
             // Generar tokens usando el puerto
             log.debug("Generating JWT tokens...");
-            String accessToken = tokenGeneratorPort.generateToken(authentication);
+            String accessToken = tokenGeneratorPort.generateToken(authentication, userInfo.customerId());
             String refreshToken = tokenGeneratorPort.generateRefreshToken(userInfo.username());
 
             log.info("Authentication successful for user: {}", userInfo.username());
@@ -139,7 +139,7 @@ public class AuthService implements AuthenticateUserUseCase, RefreshTokenUseCase
                 grantedAuthorities
             );
 
-            String newAccessToken = tokenGeneratorPort.generateToken(authentication);
+            String newAccessToken = tokenGeneratorPort.generateToken(authentication, null);
             
             log.info("Token refreshed successfully for user: {}", username);
 
