@@ -29,6 +29,9 @@ public class InternalUserValidationResponse {
 
     @JsonProperty("locked")
     private Boolean locked;
+    
+    @JsonProperty("customer_id")
+    private Long customerId;
 
     @JsonProperty("roles")
     private Set<String> roles;

@@ -37,9 +37,10 @@ public class JwtTokenProvider {
      * Genera un JWT a partir de la autenticación.
      *
      * @param authentication la autenticación del usuario
+     * @param customerId ID del cliente asociado al usuario
      * @return el token JWT generado
      */
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, Long customerId) {
         String username = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         
@@ -52,12 +53,17 @@ public class JwtTokenProvider {
 
         SecretKey key = getSigningKey();
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
             .setSubject(username)
             .claim(JwtConstants.AUTHORITIES_CLAIM, authoritiesString)
             .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(key, SignatureAlgorithm.HS512)
+            .setExpiration(expiryDate);
+            
+        if (customerId != null) {
+            builder.claim("customerId", customerId);
+        }
+        
+        return builder.signWith(key, SignatureAlgorithm.HS512)
             .compact();
     }
 

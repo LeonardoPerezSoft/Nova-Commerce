@@ -28,6 +28,9 @@ public record UserResponse(
 
     @JsonProperty("locked")
     Boolean locked,
+    
+    @JsonProperty("customer_id")
+    Long customerId,
 
     @JsonProperty("roles")
     Set<RoleResponse> roles,

@@ -18,10 +18,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 /**
  * Adaptador de entrada REST para endpoints internos de usuarios.
@@ -92,5 +96,26 @@ public class InternalUserRestController {
         UserResponse createdUser = manageUsersUseCase.createUser(request);
         log.info("Usuario creado exitosamente: {}", createdUser.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    }
+    
+    @PutMapping("/{userId}/customer/{customerId}")
+    @Operation(
+        summary = "Actualizar customerId de usuario (interno)",
+        description = "Asocia un customerId a un usuario existente. Endpoint interno protegido con API Key.",
+        security = {}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "CustomerId actualizado"),
+        @ApiResponse(responseCode = "401", description = "API Key inválida"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    public ResponseEntity<Void> updateCustomerId(
+        @PathVariable UUID userId,
+        @PathVariable Long customerId) {
+        
+        log.info("Actualizando customerId {} para usuario: {}", customerId, userId);
+        manageUsersUseCase.updateCustomerId(userId, customerId);
+        log.info("CustomerId actualizado exitosamente para usuario: {}", userId);
+        return ResponseEntity.noContent().build();
     }
 }

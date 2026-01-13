@@ -3,7 +3,9 @@ package com.novacommerce.auth_service.adapter.out.user;
 import com.novacommerce.auth_service.adapter.out.user.dto.CreateUserRequest;
 import com.novacommerce.auth_service.adapter.out.user.dto.CreateUserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
@@ -28,5 +30,19 @@ public interface UserServiceFeignClient {
     CreateUserResponse createUser(
         @RequestHeader("X-Internal-API-Key") String apiKey,
         @RequestBody CreateUserRequest request
+    );
+    
+    /**
+     * Actualiza el customerId de un usuario existente.
+     * 
+     * @param apiKey API Key para autenticación interna
+     * @param userId ID del usuario
+     * @param customerId ID del cliente
+     */
+    @PutMapping("/internal/users/{userId}/customer/{customerId}")
+    void updateCustomerId(
+        @RequestHeader("X-Internal-API-Key") String apiKey,
+        @PathVariable("userId") String userId,
+        @PathVariable("customerId") Long customerId
     );
 }

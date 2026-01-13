@@ -65,7 +65,7 @@ class JwtTokenAdapterTest {
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
         
         // When
-        String token = jwtTokenAdapter.generateToken(authentication);
+        String token = jwtTokenAdapter.generateToken(authentication, null);
         
         // Then
         assertNotNull(token);
@@ -110,7 +110,7 @@ class JwtTokenAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
         
-        String token = jwtTokenAdapter.generateToken(authentication);
+        String token = jwtTokenAdapter.generateToken(authentication, null);
         
         // When
         boolean isValid = jwtTokenAdapter.validateToken(token);
@@ -155,7 +155,7 @@ class JwtTokenAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
         
-        String token = jwtTokenAdapter.generateToken(authentication);
+        String token = jwtTokenAdapter.generateToken(authentication, null);
         
         // When
         String extractedUsername = jwtTokenAdapter.getUsernameFromToken(token);
@@ -177,7 +177,7 @@ class JwtTokenAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
         
-        String token = jwtTokenAdapter.generateToken(authentication);
+        String token = jwtTokenAdapter.generateToken(authentication, null);
         
         // When
         String extractedAuthorities = jwtTokenAdapter.getAuthoritiesFromToken(token);
@@ -198,7 +198,7 @@ class JwtTokenAdapterTest {
         when(authentication.getName()).thenReturn(username);
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
         
-        String token = jwtTokenAdapter.generateToken(authentication);
+        String token = jwtTokenAdapter.generateToken(authentication, null);
         
         // When - Parse token manually to verify claims
         byte[] decodedKey = Base64.getDecoder().decode(jwtSecret);
@@ -227,13 +227,13 @@ class JwtTokenAdapterTest {
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
 
         // When
-        String token1 = jwtTokenAdapter.generateToken(authentication);
+        String token1 = jwtTokenAdapter.generateToken(authentication, null);
         try {
             Thread.sleep(10); // Small delay to ensure different timestamps
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        String token2 = jwtTokenAdapter.generateToken(authentication);
+        String token2 = jwtTokenAdapter.generateToken(authentication, null);
 
         // Then
         // Tokens may be identical due to millisecond rounding; just verify both are valid
@@ -262,6 +262,7 @@ class JwtTokenAdapterTest {
         when(authentication.getAuthorities()).thenReturn((Collection) authorities);
 
         // When & Then - Should not throw exception
-        assertDoesNotThrow(() -> adapter.generateToken(authentication));
+        assertDoesNotThrow(() -> adapter.generateToken(authentication, null));
     }
 }
+

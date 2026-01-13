@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -77,12 +78,22 @@ public class UserService implements ManageUsersUseCase, ValidateUserCredentialsU
 
         String encryptedPassword = passwordEncoderPort.encode(createUserRequest.password());
         Set<Role> roles = loadRoles(createUserRequest.roleIds());
+        
+        // Si no se especifican roles, asignar rol USER por defecto
+        if (roles.isEmpty()) {
+            roles = new HashSet<>();
+            Role defaultUserRole = rolePersistencePort.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Rol USER no encontrado en el sistema"));
+            roles.add(defaultUserRole);
+            log.debug("Rol USER asignado por defecto al usuario: {}", createUserRequest.username());
+        }
 
         User user = User.builder()
             .username(createUserRequest.username())
             .email(createUserRequest.email())
             .password(encryptedPassword)
             .roles(roles)
+            .customerId(createUserRequest.customerId())
             .build();
 
         User savedUser = userPersistencePort.save(user);
@@ -148,6 +159,19 @@ public class UserService implements ManageUsersUseCase, ValidateUserCredentialsU
 
         return user != null && user.getUsername().equals(currentUsername);
     }
+    
+    @Override
+    public void updateCustomerId(UUID userId, Long customerId) {
+        log.info("Actualizando customerId {} para usuario: {}", customerId, userId);
+        
+        User user = userPersistencePort.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        
+        user.setCustomerId(customerId);
+        userPersistencePort.save(user);
+        
+        log.info("CustomerId actualizado exitosamente para usuario: {}", userId);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -201,6 +225,7 @@ public class UserService implements ManageUsersUseCase, ValidateUserCredentialsU
             .permissions(permissions)
             .enabled(user.getEnabled())
             .locked(user.getLocked())
+            .customerId(user.getCustomerId())
             .build();
     }
 

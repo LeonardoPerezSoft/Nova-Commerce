@@ -50,7 +50,8 @@ class UserServiceAdapterTest {
             true,
             false,
             Set.of("ADMIN"),
-            Set.of("USER_READ", "USER_WRITE")
+            Set.of("USER_READ", "USER_WRITE"),
+            null
         );
 
         when(userServiceClient.validateCredentials(any(UserValidationRequest.class), anyString()))
@@ -120,7 +121,8 @@ class UserServiceAdapterTest {
             true,
             false,
             Set.of("USER"),
-            Set.of()
+            Set.of(),
+            null
         );
 
         when(userServiceClient.validateCredentials(any(UserValidationRequest.class), eq(customApiKey)))
@@ -145,7 +147,8 @@ class UserServiceAdapterTest {
             true,
             false,
             Set.<String>of(),
-            Set.<String>of()
+            Set.<String>of(),
+            null
         );
 
         when(userServiceClient.validateCredentials(any(UserValidationRequest.class), anyString()))
@@ -172,7 +175,8 @@ class UserServiceAdapterTest {
             false, // disabled
             false,
             Set.of("USER"),
-            Set.of()
+            Set.of(),
+            null
         );
 
         when(userServiceClient.validateCredentials(any(UserValidationRequest.class), anyString()))
@@ -198,7 +202,8 @@ class UserServiceAdapterTest {
             true,
             true, // locked
             Set.of("USER"),
-            Set.of()
+            Set.of(),
+            null
         );
 
         when(userServiceClient.validateCredentials(any(UserValidationRequest.class), anyString()))
@@ -212,3 +217,4 @@ class UserServiceAdapterTest {
         assertTrue(response.locked());
     }
 }
+

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public class OrderRestController {
     private final OrderDtoMapper orderDtoMapper;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ROLE_USER')")
     @Operation(summary = "Crear orden", description = "Crea una nueva orden validando cliente, productos y aplicando descuentos")
     public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         log.info("Creating order for customer: {}", request.getCustomerId());
@@ -50,6 +52,7 @@ public class OrderRestController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'USER')")
     @Operation(summary = "Listar órdenes", description = "Obtiene todas las órdenes del sistema")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderResponse> orders = getOrderUseCase.getAllOrders().stream()
@@ -60,6 +63,7 @@ public class OrderRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'USER')")
     @Operation(summary = "Obtener orden por ID", description = "Retorna los detalles de una orden específica")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
         return getOrderUseCase.getOrderById(id)
@@ -69,6 +73,7 @@ public class OrderRestController {
     }
 
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'USER')")
     @Operation(summary = "Obtener órdenes por cliente", description = "Retorna todas las órdenes de un cliente")
     public ResponseEntity<List<OrderResponse>> getOrdersByCustomerId(@PathVariable Long customerId) {
         List<OrderResponse> orders = getOrderUseCase.getOrdersByCustomerId(customerId).stream()
@@ -79,6 +84,7 @@ public class OrderRestController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Actualizar estado de orden", description = "Cambia el estado de una orden validando transiciones permitidas")
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,

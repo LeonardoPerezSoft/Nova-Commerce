@@ -1,5 +1,6 @@
 package com.novacommerce.auth_service.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 
 /**
@@ -12,6 +13,8 @@ public record UserValidationResponse(
     boolean enabled,
     boolean locked,
     Set<String> roles,
-    Set<String> permissions
+    Set<String> permissions,
+    @JsonProperty("customer_id")
+    Long customerId
 ) {
 }

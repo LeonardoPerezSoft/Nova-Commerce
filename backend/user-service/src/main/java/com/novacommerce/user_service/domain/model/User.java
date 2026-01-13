@@ -65,6 +65,9 @@ public class User {
     @Builder.Default
     private Boolean locked = false;
 
+    @Column(name = "customer_id")
+    private Long customerId;
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
         name = "user_role",

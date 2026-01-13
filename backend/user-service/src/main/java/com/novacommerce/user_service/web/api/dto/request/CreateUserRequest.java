@@ -25,5 +25,8 @@ public record CreateUserRequest(
     String password,
 
     @JsonProperty("role_ids")
-    Set<UUID> roleIds
+    Set<UUID> roleIds,
+    
+    @JsonProperty("customer_id")
+    Long customerId
 ) {}

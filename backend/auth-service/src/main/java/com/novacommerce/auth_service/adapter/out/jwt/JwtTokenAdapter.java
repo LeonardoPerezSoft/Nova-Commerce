@@ -34,7 +34,7 @@ public class JwtTokenAdapter implements TokenGeneratorPort {
     private long refreshTokenExpirationMs;
 
     @Override
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, Long customerId) {
         String username = authentication.getName();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         
@@ -47,14 +47,19 @@ public class JwtTokenAdapter implements TokenGeneratorPort {
 
         SecretKey key = getSigningKey();
 
-        log.debug("Generating token for user: {} with authorities: {}", username, authoritiesString);
+        log.debug("Generating token for user: {} with authorities: {} and customerId: {}", username, authoritiesString, customerId);
         
-        return Jwts.builder()
+        var builder = Jwts.builder()
             .setSubject(username)
             .claim(JwtConstants.AUTHORITIES_CLAIM, authoritiesString)
             .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(key, SignatureAlgorithm.HS512)
+            .setExpiration(expiryDate);
+            
+        if (customerId != null) {
+            builder.claim("customerId", customerId);
+        }
+        
+        return builder.signWith(key, SignatureAlgorithm.HS512)
             .compact();
     }
 

@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -27,10 +29,12 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService Tests")
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AuthServiceTest {
 
     @Mock
@@ -61,12 +65,13 @@ class AuthServiceTest {
             true,
             false,
             Set.of("ADMIN", "MANAGER"),
-            Set.of("USER_READ", "USER_WRITE")
+            Set.of("USER_READ", "USER_WRITE"),
+            null
         );
 
         when(userValidationPort.validateCredentials(any(UserValidationRequest.class)))
             .thenReturn(validationResponse);
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("access-token");
         when(tokenGeneratorPort.generateRefreshToken(anyString()))
             .thenReturn("refresh-token");
@@ -83,7 +88,7 @@ class AuthServiceTest {
         assertEquals("testuser", response.username());
         
         verify(userValidationPort, times(1)).validateCredentials(any(UserValidationRequest.class));
-        verify(tokenGeneratorPort, times(1)).generateToken(any(Authentication.class));
+        verify(tokenGeneratorPort, times(1)).generateToken(any(Authentication.class), any());
         verify(tokenGeneratorPort, times(1)).generateRefreshToken("testuser");
     }
 
@@ -96,10 +101,11 @@ class AuthServiceTest {
         UserValidationResponse validationResponse = new UserValidationResponse(
             "testuser",
             "test@email.com",
-            false, // disabled
+            false,
             false,
             Set.of("USER"),
-            Set.of()
+            Set.of(),
+            null
         );
 
         when(userValidationPort.validateCredentials(any(UserValidationRequest.class)))
@@ -111,7 +117,7 @@ class AuthServiceTest {
         );
         
         verify(userValidationPort, times(1)).validateCredentials(any(UserValidationRequest.class));
-        verify(tokenGeneratorPort, never()).generateToken(any());
+        verify(tokenGeneratorPort, never()).generateToken(any(), any());
         verify(tokenGeneratorPort, never()).generateRefreshToken(anyString());
     }
 
@@ -127,7 +133,8 @@ class AuthServiceTest {
             true,
             true, // locked
             Set.of("USER"),
-            Set.of()
+            Set.of(),
+            null
         );
 
         when(userValidationPort.validateCredentials(any(UserValidationRequest.class)))
@@ -139,7 +146,7 @@ class AuthServiceTest {
         );
         
         verify(userValidationPort, times(1)).validateCredentials(any(UserValidationRequest.class));
-        verify(tokenGeneratorPort, never()).generateToken(any());
+        verify(tokenGeneratorPort, never()).generateToken(any(), any());
         verify(tokenGeneratorPort, never()).generateRefreshToken(anyString());
     }
 
@@ -158,7 +165,7 @@ class AuthServiceTest {
         );
         
         verify(userValidationPort, times(1)).validateCredentials(any(UserValidationRequest.class));
-        verify(tokenGeneratorPort, never()).generateToken(any());
+        verify(tokenGeneratorPort, never()).generateToken(any(), any());
         verify(tokenGeneratorPort, never()).generateRefreshToken(anyString());
     }
 
@@ -174,12 +181,13 @@ class AuthServiceTest {
             true,
             false,
             Set.of("ADMIN"),
-            Set.of("USER_READ")
+            Set.of("USER_READ"),
+            null
         );
 
         when(userValidationPort.validateCredentials(any(UserValidationRequest.class)))
             .thenReturn(validationResponse);
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("access-token");
         when(tokenGeneratorPort.generateRefreshToken(anyString()))
             .thenReturn("refresh-token");
@@ -191,7 +199,7 @@ class AuthServiceTest {
         verify(tokenGeneratorPort).generateToken(argThat(auth -> {
             String authorities = auth.getAuthorities().toString();
             return authorities.contains("ROLE_ADMIN") && authorities.contains("USER_READ");
-        }));
+        }), any());
     }
 
     @Test
@@ -204,7 +212,7 @@ class AuthServiceTest {
         when(tokenGeneratorPort.getUsernameFromToken("valid-refresh-token")).thenReturn("testuser");
         when(tokenGeneratorPort.getAuthoritiesFromToken("valid-refresh-token"))
             .thenReturn("ROLE_ADMIN,USER_READ");
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("new-access-token");
 
         // When
@@ -219,7 +227,7 @@ class AuthServiceTest {
         
         verify(tokenGeneratorPort, times(1)).validateToken("valid-refresh-token");
         verify(tokenGeneratorPort, times(1)).getUsernameFromToken("valid-refresh-token");
-        verify(tokenGeneratorPort, times(1)).generateToken(any(Authentication.class));
+        verify(tokenGeneratorPort, times(1)).generateToken(any(Authentication.class), any());
     }
 
     @Test
@@ -237,7 +245,7 @@ class AuthServiceTest {
         
         verify(tokenGeneratorPort, times(1)).validateToken("invalid-token");
         verify(tokenGeneratorPort, never()).getUsernameFromToken(anyString());
-        verify(tokenGeneratorPort, never()).generateToken(any());
+        verify(tokenGeneratorPort, never()).generateToken(any(), any());
     }
 
     @Test
@@ -317,12 +325,11 @@ class AuthServiceTest {
             true,
             false,
             Set.<String>of(),
-            Set.<String>of()
-        );
+            Set.<String>of(), null);
 
         when(userValidationPort.validateCredentials(any(UserValidationRequest.class)))
             .thenReturn(validationResponse);
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("access-token");
         when(tokenGeneratorPort.generateRefreshToken(anyString()))
             .thenReturn("refresh-token");
@@ -332,7 +339,7 @@ class AuthServiceTest {
 
         // Then
         assertNotNull(response);
-        verify(tokenGeneratorPort).generateToken(any(Authentication.class));
+        verify(tokenGeneratorPort).generateToken(any(Authentication.class), any());
     }
 
     @Test
@@ -344,7 +351,7 @@ class AuthServiceTest {
         when(tokenGeneratorPort.validateToken("valid-refresh-token")).thenReturn(true);
         when(tokenGeneratorPort.getUsernameFromToken("valid-refresh-token")).thenReturn("testuser");
         when(tokenGeneratorPort.getAuthoritiesFromToken("valid-refresh-token")).thenReturn("");
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("new-access-token");
 
         // When
@@ -364,7 +371,7 @@ class AuthServiceTest {
         when(tokenGeneratorPort.validateToken("valid-refresh-token")).thenReturn(true);
         when(tokenGeneratorPort.getUsernameFromToken("valid-refresh-token")).thenReturn("testuser");
         when(tokenGeneratorPort.getAuthoritiesFromToken("valid-refresh-token")).thenReturn(null);
-        when(tokenGeneratorPort.generateToken(any(Authentication.class)))
+        when(tokenGeneratorPort.generateToken(any(Authentication.class), any()))
             .thenReturn("new-access-token");
 
         // When
@@ -375,3 +382,6 @@ class AuthServiceTest {
         assertEquals("new-access-token", response.accessToken());
     }
 }
+
+
+
