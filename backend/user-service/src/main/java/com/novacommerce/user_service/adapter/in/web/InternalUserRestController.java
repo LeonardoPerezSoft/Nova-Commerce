@@ -1,8 +1,11 @@
 package com.novacommerce.user_service.adapter.in.web;
 
+import com.novacommerce.user_service.application.port.in.ManageUsersUseCase;
 import com.novacommerce.user_service.application.port.in.ValidateUserCredentialsUseCase;
+import com.novacommerce.user_service.web.api.dto.request.CreateUserRequest;
 import com.novacommerce.user_service.web.api.dto.request.InternalUserValidationRequest;
 import com.novacommerce.user_service.web.api.dto.response.InternalUserValidationResponse;
+import com.novacommerce.user_service.web.api.dto.response.UserResponse;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class InternalUserRestController {
 
     private final ValidateUserCredentialsUseCase validateUserCredentialsUseCase;
+    private final ManageUsersUseCase manageUsersUseCase;
 
     @PostMapping("/validate")
     @Operation(
@@ -64,5 +69,28 @@ public class InternalUserRestController {
         log.info("Credenciales validadas exitosamente para: {}", request.userIdentifier());
         
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    @Operation(
+        summary = "Crear usuario (interno)",
+        description = "Crea un nuevo usuario desde auth-service. Endpoint interno protegido con API Key.",
+        security = {}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Usuario creado",
+            content = @Content(schema = @Schema(implementation = UserResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+        @ApiResponse(responseCode = "401", description = "API Key inválida"),
+        @ApiResponse(responseCode = "409", description = "Usuario ya existe")
+    })
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        log.info("Solicitud de creación de usuario interno: {}", request.username());
+        UserResponse createdUser = manageUsersUseCase.createUser(request);
+        log.info("Usuario creado exitosamente: {}", createdUser.id());
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 }

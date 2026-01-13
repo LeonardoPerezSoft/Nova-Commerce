@@ -1,12 +1,14 @@
 package com.novacommerce.customer_service.adapter.in.web;
 
+import com.novacommerce.customer_service.adapter.in.web.dto.CustomerDto;
+import com.novacommerce.customer_service.adapter.in.web.mapper.CustomerMapper;
 import com.novacommerce.customer_service.application.port.in.ManageCustomersUseCase;
 import com.novacommerce.customer_service.domain.model.Customer;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -36,20 +38,31 @@ class InternalCustomerResponse {
  * Endpoints internos para consumo entre microservicios.
  * Protegidos por InternalApiKeyFilter y abiertos en SecurityConfig.
  */
+@Slf4j
 @RestController
 @RequestMapping("/internal/customers")
 public class InternalCustomerController {
 
     private final ManageCustomersUseCase manageCustomersUseCase;
+    private final CustomerMapper mapper;
 
-    public InternalCustomerController(ManageCustomersUseCase manageCustomersUseCase) {
+    public InternalCustomerController(ManageCustomersUseCase manageCustomersUseCase, CustomerMapper mapper) {
         this.manageCustomersUseCase = manageCustomersUseCase;
+        this.mapper = mapper;
     }
 
     @GetMapping("/{id}")
-        public ResponseEntity<InternalCustomerResponse> getByIdInternal(@PathVariable Long id) {
+    public ResponseEntity<InternalCustomerResponse> getByIdInternal(@PathVariable Long id) {
         return manageCustomersUseCase.findById(id)
             .map(c -> ResponseEntity.ok(InternalCustomerResponse.from(c)))
             .orElseGet(() -> ResponseEntity.notFound().build());
-        }
+    }
+
+    @PostMapping
+    public ResponseEntity<InternalCustomerResponse> createCustomerInternal(@Valid @RequestBody CustomerDto request) {
+        log.info("Solicitud de creación de cliente interno: {}", request.getEmail());
+        Customer created = manageCustomersUseCase.create(mapper.toDomain(request));
+        log.info("Cliente creado exitosamente con ID: {}", created.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(InternalCustomerResponse.from(created));
+    }
 }

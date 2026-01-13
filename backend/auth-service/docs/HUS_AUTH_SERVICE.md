@@ -499,9 +499,282 @@ Como sistema de autorización compatible con Spring Security, Quiero prefixar to
 
 ---
 
-## Feature FT-AUTH-005 - Configuración y Documentación
+## Feature FT-AUTH-005 - Registro Público de Clientes
 
-### US-AUTH-018: Documentar API con OpenAPI/Swagger
+### US-AUTH-018: Registrar nuevo cliente con datos completos
+
+**Descripción:**  
+Como usuario no autenticado, Quiero crear una cuenta completa en la plataforma (usuario + cliente), Para comenzar a usar los servicios de NovaCommerce sin intervención manual.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un RegisterRequest con datos válidos y completos |
+| **Cuando** | Se invoca POST /api/auth/public/register |
+| **Entonces** | Se crea usuario en User-Service y cliente en Customer-Service; retorna HTTP 201 con RegisterResponse (userId, customerId, email, fullName, loginUrl) |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005 - Registro Público de Clientes
+- **Épica:** EP-AUTH-001 - Sistema de Autenticación
+- **Dependencias:** User-Service y Customer-Service activos
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- Endpoint público: POST /api/auth/public/register (sin autenticación)
+- Utiliza RegistrationService para orquestar creación en ambos servicios
+- Flujo: crear usuario → crear cliente con userId
+- Cliente se inicializa con loyaltyLevel="BRONZE" (nivel por defecto)
+- Transacción distribuida: ambos servicios deben completar (compensación manual si falla uno)
+- Utiliza Feign para comunicación con User-Service y Customer-Service
+- Header X-Internal-API-Key para autenticación interna entre servicios
+
+---
+
+### US-AUTH-019: Validar estructura de datos en registro
+
+**Descripción:**  
+Como sistema de entrada, Quiero validar que el RegisterRequest cumpla con los requisitos mínimos, Para rechazar solicitudes incompletas o malformadas antes de intentar crear recursos.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un RegisterRequest con campos inválidos (vacíos, cortos, formato incorrecto) |
+| **Cuando** | Se invoca POST /api/auth/public/register |
+| **Entonces** | Se rechaza con HTTP 400 y detalle de campos específicos que no cumplen validaciones |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** Ninguna
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- RegisterRequest validaciones Jakarta:
+  - username: @NotBlank, @Size(min=3, max=50)
+  - email: @NotBlank, @Email
+  - password: @NotBlank, @Size(min=8)
+  - firstName: @NotBlank
+  - lastName: @NotBlank
+  - phone: @Pattern(regex con validación de teléfono)
+- GlobalExceptionHandler retorna MethodArgumentNotValidException con fieldErrors
+- Response HTTP 400 contiene mapa de errores por campo
+
+---
+
+### US-AUTH-020: Rechazar email duplicado en registro
+
+**Descripción:**  
+Como sistema de integridad de datos, Quiero rechazar registros con email ya existente, Para prevenir duplicados y mantener emails únicos como identificadores.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un email que ya existe en la base de datos (en User-Service) |
+| **Cuando** | Se invoca POST /api/auth/public/register |
+| **Entonces** | Se rechaza con HTTP 409 Conflict y excepción DuplicateResourceException indicando "Usuario con email = ... ya existe" |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** US-AUTH-018
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- User-Service retorna HTTP 409 o lanza DuplicateResourceException para emails duplicados
+- RegistrationService captura la excepción y la propaga
+- GlobalExceptionHandler maneja DuplicateResourceException → HTTP 409
+- Mensaje: "Usuario con email = {email} ya existe"
+
+---
+
+### US-AUTH-021: Rechazar username duplicado en registro
+
+**Descripción:**  
+Como sistema de integridad de datos, Quiero rechazar registros con username ya existente, Para prevenir duplicados y mantener usernames únicos como identificadores.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Un username que ya existe en la base de datos (en User-Service) |
+| **Cuando** | Se invoca POST /api/auth/public/register |
+| **Entonces** | Se rechaza con HTTP 409 Conflict y DuplicateResourceException indicando "Usuario con username = ... ya existe" |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** US-AUTH-018
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- User-Service valida uniqueness de username
+- Mismo manejo que US-AUTH-020
+- Mensaje: "Usuario con username = {username} ya existe"
+
+---
+
+### US-AUTH-022: Integrar registro con User Service para crear usuario
+
+**Descripción:**  
+Como Auth Service, Quiero delegar la creación de usuarios a User-Service vía Feign, Para mantener una única fuente de verdad sobre usuarios y mantener principios de separación de responsabilidades.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | RegistrationService en proceso de crear cliente |
+| **Cuando** | Se invoca UserServiceFeignClient.createUser() |
+| **Entonces** | Se realiza POST /api/internal/users en User-Service con header X-Internal-API-Key y recibe CreateUserResponse con userId |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** User-Service activo en puerto 8082
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- UserServiceFeignClient interface con @PostMapping("/api/internal/users")
+- RequestHeader X-Internal-API-Key con valor de propiedad app.jwt.internal-api-key
+- CreateUserRequest: username, email, password, firstName, lastName
+- CreateUserResponse: userId (UUID), username, email
+- Error handling: FeignException → manejo según status code
+
+---
+
+### US-AUTH-023: Integrar registro con Customer Service para crear cliente
+
+**Descripción:**  
+Como Auth Service, Quiero delegar la creación de clientes a Customer-Service vía Feign, Para mantener datos de clientes en un único servicio especializado.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Usuario creado exitosamente en User-Service y userId disponible |
+| **Cuando** | Se invoca CustomerServiceFeignClient.createCustomer() |
+| **Entonces** | Se realiza POST /api/internal/customers en Customer-Service con userId y recibe CreateCustomerResponse con customerId |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** Customer-Service activo en puerto 8083
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- CustomerServiceFeignClient interface con @PostMapping("/api/internal/customers")
+- RequestHeader X-Internal-API-Key con mismo valor que User-Service
+- CreateCustomerRequest: userId, firstName, lastName, phone, loyaltyLevel
+- loyaltyLevel: inicializado con "BRONZE" por defecto
+- CreateCustomerResponse: customerId (Long), userId, email, fullName
+- Error handling: FeignException → manejo según status code
+
+---
+
+### US-AUTH-024: Manejar fallos en creación de usuario durante registro
+
+**Descripción:**  
+Como sistema resiliente, Quiero manejar errores de comunicación o fallos en User-Service durante el registro, Para proporcionar mensajes claros al cliente y evitar inconsistencias de datos.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | User-Service no está disponible o retorna error durante POST /api/internal/users |
+| **Cuando** | Se intenta crear usuario durante el registro |
+| **Entonces** | Se lanza excepción, se propaga al cliente con HTTP 503 o 500 según sea necesario, sin crear cliente huérfano |
+
+**Metadatos:**
+- **Prioridad:** Media
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** US-AUTH-022
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- RegistrationService captura FeignException de UserServiceFeignClient
+- Mapea status codes a excepciones de dominio:
+  - 409 (Conflict) → DuplicateResourceException
+  - 400 (Bad Request) → Errores de validación
+  - 503/504 → RuntimeException con mensaje "User-Service no disponible"
+- GlobalExceptionHandler retorna HTTP apropiado
+- Cliente recibe error claro: no se persisten datos parciales
+
+---
+
+### US-AUTH-025: Manejar fallos en creación de cliente durante registro
+
+**Descripción:**  
+Como sistema resiliente, Quiero manejar errores en Customer-Service durante el registro, Para evitar usuarios sin cliente asociado o transacciones incompletas.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Usuario creado exitosamente pero Customer-Service falla o no está disponible |
+| **Cuando** | Se intenta crear cliente |
+| **Entonces** | Se lanza excepción, cliente recibe HTTP 500, y usuario queda creado pero sin cliente (inconsistencia que requiere compensación manual o retry) |
+
+**Metadatos:**
+- **Prioridad:** Media
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** US-AUTH-023
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- RegistrationService captura FeignException de CustomerServiceFeignClient
+- Mapeo similar a US-AUTH-024
+- Problema conocido: transacción distribuida incompleta
+- Futuro: implementar saga pattern o compensating transactions
+- Log de error para auditoría manual
+
+---
+
+### US-AUTH-026: Retornar datos completos de registro exitoso
+
+**Descripción:**  
+Como cliente de la API, Quiero recibir la información del usuario y cliente recién creados, Para proceder al login y guardar IDs para referencias futuras.
+
+**Criterios de Aceptación:**
+
+| Escenario | Condición |
+|-----------|-----------|
+| **Dado** | Registro exitoso de usuario + cliente |
+| **Cuando** | Se completa POST /api/auth/public/register |
+| **Entonces** | Retorna HTTP 201 con RegisterResponse: userId, customerId, email, fullName, message ("Registro exitoso"), loginUrl ("/api/auth/login") |
+
+**Metadatos:**
+- **Prioridad:** Alta
+- **Feature:** FT-AUTH-005
+- **Épica:** EP-AUTH-001
+- **Dependencias:** US-AUTH-018, US-AUTH-022, US-AUTH-023
+- **Versión/Release:** 1.0
+
+**Detalles Técnicos:**
+- RegisterResponse DTO con campos:
+  - userId: String (UUID del usuario)
+  - customerId: Long (ID del cliente)
+  - email: String
+  - fullName: String (firstName + " " + lastName)
+  - message: String ("Registro exitoso")
+  - loginUrl: String ("/api/auth/login")
+- HTTP 201 Created (no 200) para indicar nuevo recurso
+- Response documentado en Swagger con ejemplo
+
+---
+
+## Feature FT-AUTH-006 - Configuración y Documentación
+
+### US-AUTH-027: Documentar API con OpenAPI/Swagger
 
 **Descripción:**  
 Como desarrollador consumidor, Quiero acceder a documentación interactiva de la API, Para entender cómo autenticarme y utilizar los endpoints sin leer código.
@@ -530,7 +803,7 @@ Como desarrollador consumidor, Quiero acceder a documentación interactiva de la
 
 ---
 
-### US-AUTH-019: Configurar JWT secret compartido con API Gateway
+### US-AUTH-028: Configurar JWT secret compartido con API Gateway
 
 **Descripción:**  
 Como arquitecto de seguridad, Quiero que el JWT secret sea configurable vía variables de entorno, Para compartir la misma clave entre Auth-Service y API Gateway sin hardcodearla.
@@ -545,7 +818,7 @@ Como arquitecto de seguridad, Quiero que el JWT secret sea configurable vía var
 
 **Metadatos:**
 - **Prioridad:** Alta
-- **Feature:** FT-AUTH-005
+- **Feature:** FT-AUTH-006
 - **Épica:** EP-AUTH-001
 - **Dependencias:** US-AUTH-006
 - **Versión/Release:** 1.0
@@ -559,7 +832,7 @@ Como arquitecto de seguridad, Quiero que el JWT secret sea configurable vía var
 
 ---
 
-### US-AUTH-020: Implementar Clean Architecture con puertos y adaptadores
+### US-AUTH-029: Implementar Clean Architecture con puertos y adaptadores
 
 **Descripción:**  
 Como arquitecto de software, Quiero separar la lógica de negocio de los detalles de infraestructura, Para facilitar testing, mantenibilidad y evolución del código.
@@ -574,7 +847,7 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 
 **Metadatos:**
 - **Prioridad:** Media
-- **Feature:** FT-AUTH-005
+- **Feature:** FT-AUTH-006
 - **Épica:** EP-AUTH-001
 - **Dependencias:** Todas las US
 - **Versión/Release:** 1.0
@@ -582,9 +855,9 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 **Detalles Técnicos:**
 - **Application Layer**: AuthService, Use Cases (interfaces), Ports
 - **Adapter Layer IN**: AuthRestController (REST HTTP)
-- **Adapter Layer OUT**: JwtTokenAdapter (JWT), UserServiceAdapter (Feign)
+- **Adapter Layer OUT**: JwtTokenAdapter (JWT), UserServiceAdapter (Feign), CustomerServiceAdapter (Feign)
 - **Dependencias**: Application Layer independiente de frameworks
-- **Testing**: Fácil mockear puertos (TokenGeneratorPort, UserValidationPort)
+- **Testing**: Fácil mockear puertos (TokenGeneratorPort, UserValidationPort, UserCreationPort, CustomerCreationPort)
 
 ---
 
@@ -596,14 +869,16 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 | FT-AUTH-002 | US-AUTH-006 a US-AUTH-010 | Alta | ✅ Implementado | ✅ 100% |
 | FT-AUTH-003 | US-AUTH-011 a US-AUTH-014 | Alta | ✅ Implementado | ✅ 95% |
 | FT-AUTH-004 | US-AUTH-015 a US-AUTH-017 | Alta | ✅ Implementado | ✅ 100% |
-| FT-AUTH-005 | US-AUTH-018 a US-AUTH-020 | Media | ✅ Implementado | ✅ 93% |
+| FT-AUTH-005 | US-AUTH-018 a US-AUTH-026 | Alta | ✅ Implementado | ✅ 100% |
+| FT-AUTH-006 | US-AUTH-027 a US-AUTH-029 | Media | ✅ Implementado | ✅ 93% |
 
 ---
 
 ## 🔗 Dependencias Externas
 
 ### Dependencias de Microservicios
-- **User-Service** (puerto 8082): Validación de credenciales, obtención de roles/permisos
+- **User-Service** (puerto 8082): Validación de credenciales, obtención de roles/permisos, creación de usuarios
+- **Customer-Service** (puerto 8083): Creación de clientes, gestión de datos de clientes
 - **API Gateway** (puerto 8080): Debe compartir el mismo JWT_SECRET para validar tokens
 
 ### Dependencias Técnicas
@@ -625,7 +900,8 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 - ⚠️ **JWT Secret**: Debe ser mínimo 512 bits (64 bytes) para HS512
 - ✅ **Stateless**: No se usan sesiones HTTP, todo basado en tokens
 - ✅ **CSRF**: Deshabilitado (no necesario en API REST stateless)
-- ✅ **Internal API Key**: Header X-Internal-API-Key para comunicación con User-Service
+- ✅ **Internal API Key**: Header X-Internal-API-Key para comunicación con User-Service y Customer-Service
+- ✅ **Registro Público**: Endpoint sin autenticación con validación exhaustiva de datos
 
 ### Tokens
 - **Access Token**: 24 horas de validez (configurable)
@@ -637,25 +913,36 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 - ✅ **Clean Architecture**: Separación entre dominio, aplicación y adaptadores
 - ✅ **Hexagonal**: Puertos (interfaces) y adaptadores (implementaciones)
 - ✅ **Testing**: 93% de cobertura total, 100% en componentes críticos
-- ✅ **Sin Base de Datos**: Auth-Service no persiste datos, delega a User-Service
+- ✅ **Sin Base de Datos**: Auth-Service no persiste datos, delega a User-Service y Customer-Service
+- ⚠️ **Transacciones Distribuidas**: Registro requiere coordinar con 2 servicios; sin saga pattern (mejora futura)
+
+### Registro Público
+- **Endpoint**: POST /api/auth/public/register (sin autenticación)
+- **Validaciones**: username, email, password, nombre, apellido, teléfono
+- **Flujo**: Crear usuario → Crear cliente → Retornar datos completos
+- **Cliente por defecto**: loyaltyLevel="BRONZE"
+- **Error Handling**: Validación de entrada + duplicados + errores de servicios
 
 ---
 
 ## 🚀 Roadmap Futuro
 
 ### Versión 1.1 (Próximas features)
-- **US-AUTH-021**: Implementar revocación de tokens (blacklist)
-- **US-AUTH-022**: Soporte para OAuth2/OIDC
-- **US-AUTH-023**: Autenticación de dos factores (2FA)
-- **US-AUTH-024**: Rate limiting en endpoints de login
-- **US-AUTH-025**: Auditoría de intentos de login fallidos
+- **US-AUTH-030**: Implementar revocación de tokens (blacklist)
+- **US-AUTH-031**: Soporte para OAuth2/OIDC
+- **US-AUTH-032**: Autenticación de dos factores (2FA)
+- **US-AUTH-033**: Rate limiting en endpoints de login y registro
+- **US-AUTH-034**: Auditoría de intentos de login fallidos
+- **US-AUTH-035**: Saga pattern para transacciones distribuidas en registro
 
 ### Versión 2.0 (Mejoras arquitectónicas)
-- **US-AUTH-026**: Implementar refresh token rotation
-- **US-AUTH-027**: Soporte para múltiples tenants
-- **US-AUTH-028**: Integración con proveedores externos (Google, Facebook)
-- **US-AUTH-029**: Token introspection endpoint
-- **US-AUTH-030**: Almacenamiento de tokens en Redis
+- **US-AUTH-036**: Implementar refresh token rotation
+- **US-AUTH-037**: Soporte para múltiples tenants
+- **US-AUTH-038**: Integración con proveedores externos (Google, Facebook)
+- **US-AUTH-039**: Token introspection endpoint
+- **US-AUTH-040**: Almacenamiento de tokens en Redis
+- **US-AUTH-041**: Verificación de email en registro
+- **US-AUTH-042**: Confirmación de teléfono en registro
 
 ---
 
@@ -666,3 +953,24 @@ Como arquitecto de software, Quiero separar la lógica de negocio de los detalle
 - [Swagger UI](http://localhost:8081/swagger-ui.html)
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
+- [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software))
+
+---
+
+## 🧪 Cobertura de Pruebas
+
+### AuthRestControllerTest
+- **testLoginSuccess**: Validar login exitoso con credenciales correctas
+- **testLoginInvalidRequest**: Rechazar login con datos incompletos
+- **testLoginInvalidCredentials**: Rechazar credenciales incorrectas
+- **testRefreshTokenSuccess**: Refrescar token exitosamente
+- **testRefreshTokenInvalidRequest**: Rechazar refresh con datos incompletos
+- **testRefreshTokenInvalid**: Rechazar token expirado o inválido
+- **testValidateTokenSuccess**: Validar token exitosamente
+- **testValidateTokenWithoutBearer**: Retornar inválido sin header Authorization
+- **testValidateTokenNotProvided**: Retornar inválido sin token
+- **testRegisterPublicSuccess**: Crear usuario + cliente exitosamente (HTTP 201)
+- **testRegisterPublicInvalidRequest**: Rechazar registro con datos incompletos (HTTP 400)
+- **testRegisterPublicDuplicateResource**: Rechazar email duplicado (HTTP 409)
+
+**Resultado**: 12/12 tests pasando, 0 errores, 0 fallos

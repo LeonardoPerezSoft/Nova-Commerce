@@ -2,14 +2,18 @@ package com.novacommerce.auth_service.adapter.in.web;
 
 import com.novacommerce.auth_service.application.port.in.AuthenticateUserUseCase;
 import com.novacommerce.auth_service.application.port.in.RefreshTokenUseCase;
+import com.novacommerce.auth_service.application.port.in.RegisterClientUseCase;
 import com.novacommerce.auth_service.application.port.in.ValidateTokenUseCase;
+import com.novacommerce.auth_service.web.api.dto.request.RegisterRequest;
 import com.novacommerce.auth_service.web.api.dto.request.LoginRequest;
 import com.novacommerce.auth_service.web.api.dto.request.RefreshTokenRequest;
+import com.novacommerce.auth_service.web.api.dto.response.RegisterResponse;
 import com.novacommerce.auth_service.web.api.dto.response.LoginResponse;
 import com.novacommerce.auth_service.web.api.dto.response.TokenValidationResponse;
 import com.novacommerce.auth_service.config.security.jwt.JwtTokenProvider;
 import com.novacommerce.auth_service.web.rest.exceptions.InvalidCredentialsException;
 import com.novacommerce.auth_service.web.rest.exceptions.InvalidTokenException;
+import com.novacommerce.auth_service.web.rest.exceptions.DuplicateResourceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +51,76 @@ class AuthRestControllerTest {
     private ValidateTokenUseCase validateTokenUseCase;
 
     @MockBean
+    private RegisterClientUseCase registerClientUseCase;
+
+    @MockBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @Test
+    @DisplayName("Should register client successfully (201)")
+    void testRegisterPublicSuccess() throws Exception {
+        // Given
+        RegisterRequest request = RegisterRequest.builder()
+            .username("newuser")
+            .email("newuser@example.com")
+            .password("StrongPass123")
+            .firstName("New")
+            .lastName("User")
+            .phone("3114483021")
+            .build();
+
+        RegisterResponse response = RegisterResponse.builder()
+            .userId("7eea2162-ff23-4d9e-b431-643e4dda2d0c")
+            .customerId(5L)
+            .email("newuser@example.com")
+            .fullName("New User")
+            .message("Registro exitoso")
+            .loginUrl("/api/auth/login")
+            .build();
+
+        when(registerClientUseCase.register(any(RegisterRequest.class))).thenReturn(response);
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/public/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"newuser\",\"email\":\"newuser@example.com\",\"password\":\"StrongPass123\",\"firstName\":\"New\",\"lastName\":\"User\",\"phone\":\"3114483021\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.userId").value("7eea2162-ff23-4d9e-b431-643e4dda2d0c"))
+            .andExpect(jsonPath("$.customerId").value(5))
+            .andExpect(jsonPath("$.email").value("newuser@example.com"))
+            .andExpect(jsonPath("$.fullName").value("New User"))
+            .andExpect(jsonPath("$.loginUrl").value("/api/auth/login"));
+
+        verify(registerClientUseCase, times(1)).register(any(RegisterRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should return 400 for invalid public register request")
+    void testRegisterPublicInvalidRequest() throws Exception {
+        // When & Then: múltiples violaciones de validación
+        mockMvc.perform(post("/api/auth/public/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"\",\"email\":\"bad\",\"password\":\"short\",\"firstName\":\"\",\"lastName\":\"\",\"phone\":\"abc\"}"))
+            .andExpect(status().isBadRequest());
+
+        verify(registerClientUseCase, never()).register(any());
+    }
+
+    @Test
+    @DisplayName("Should return 409 when email or username already exists")
+    void testRegisterPublicDuplicateResource() throws Exception {
+        // Given
+        when(registerClientUseCase.register(any(RegisterRequest.class)))
+            .thenThrow(new DuplicateResourceException("Usuario", "email", "duplicate@example.com"));
+
+        // When & Then
+        mockMvc.perform(post("/api/auth/public/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"dupuser\",\"email\":\"duplicate@example.com\",\"password\":\"StrongPass123\",\"firstName\":\"Dup\",\"lastName\":\"User\"}"))
+            .andExpect(status().isConflict());
+
+        verify(registerClientUseCase, times(1)).register(any(RegisterRequest.class));
+    }
 
     @Test
     @DisplayName("Should login successfully")

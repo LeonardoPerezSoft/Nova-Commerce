@@ -2,10 +2,13 @@ package com.novacommerce.auth_service.adapter.in.web;
 
 import com.novacommerce.auth_service.application.port.in.AuthenticateUserUseCase;
 import com.novacommerce.auth_service.application.port.in.RefreshTokenUseCase;
+import com.novacommerce.auth_service.application.port.in.RegisterClientUseCase;
 import com.novacommerce.auth_service.application.port.in.ValidateTokenUseCase;
 import com.novacommerce.auth_service.web.api.dto.request.LoginRequest;
 import com.novacommerce.auth_service.web.api.dto.request.RefreshTokenRequest;
+import com.novacommerce.auth_service.web.api.dto.request.RegisterRequest;
 import com.novacommerce.auth_service.web.api.dto.response.LoginResponse;
+import com.novacommerce.auth_service.web.api.dto.response.RegisterResponse;
 import com.novacommerce.auth_service.web.api.dto.response.TokenValidationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +38,7 @@ public class AuthRestController {
     private final AuthenticateUserUseCase authenticateUserUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
     private final ValidateTokenUseCase validateTokenUseCase;
+    private final RegisterClientUseCase registerClientUseCase;
 
     @PostMapping("/login")
     @Operation(
@@ -52,6 +57,25 @@ public class AuthRestController {
         LoginResponse response = authenticateUserUseCase.authenticate(loginRequest);
         log.info("Login successful for user: {}", loginRequest.userIdentifier());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/public/register")
+    @Operation(
+        summary = "Registrar nuevo cliente",
+        description = "Endpoint público de registro. Crea un nuevo usuario y cliente sin requeri autenticación.",
+        security = {}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Cliente registrado exitosamente",
+            content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de registro inválidos o incompletos"),
+        @ApiResponse(responseCode = "409", description = "Email o username ya existe")
+    })
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        log.info("Registro público: {}", registerRequest.getEmail());
+        RegisterResponse response = registerClientUseCase.register(registerRequest);
+        log.info("Registro exitoso: {}", registerRequest.getEmail());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/refresh")

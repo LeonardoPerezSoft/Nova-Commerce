@@ -7,6 +7,11 @@ spring:
     description: Servicio de autenticación y autorización centralizada...
     version: 1.0.0
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
@@ -31,8 +36,15 @@ app:
     expiration: ${JWT_EXPIRATION:86400000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
     internal-api-key: ${INTERNAL_API_KEY:nova-internal-service-key-2024}
+  client-role-id: ${CLIENT_ROLE_ID:80c97308-f6e5-42a4-9b7f-1df83b299f4f}
+  # URLs de microservicios para registro
+  services:
+    user-service:
+      url: ${USER_SERVICE_URL:http://localhost:8082}
+    customer-service:
+      url: ${CUSTOMER_SERVICE_URL:http://localhost:8084}
 
-# Configuración de comunicación con otros microservicios
+# Configuración de URL para UserServiceClient (existente)
 user-service:
   url: ${USER_SERVICE_URL:http://localhost:8082}
 
