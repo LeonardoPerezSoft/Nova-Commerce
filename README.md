@@ -99,6 +99,24 @@ sequenceDiagram
   G-->>C: JWT
 ```
 
+### Auth Service — Registro Público de Cliente
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as Gateway
+  participant A as Auth
+  participant US as User Service
+  participant CS as Customer Service
+  C->>G: POST /api/auth/public/register (email, password, name, etc.)
+  G->>A: Forward request
+  A->>US: POST /api/internal/users (X-Internal-API-Key)
+  US-->>A: 201 Created + userId
+  A->>CS: POST /api/internal/customers (X-Internal-API-Key)
+  CS-->>A: 201 Created + customerId
+  A-->>G: 201 Created + RegisterResponse
+  G-->>C: userId, customerId, email, fullName
+```
+
 ### User Service — Creación de Usuario
 ```mermaid
 sequenceDiagram

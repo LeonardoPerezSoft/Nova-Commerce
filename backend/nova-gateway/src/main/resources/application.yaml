@@ -71,6 +71,7 @@ gateway:
   public-paths:
     - /api/auth/login
     - /api/auth/refresh
+    - /api/auth/public/register
     - /api/public/**
     - /images/**
     - /swagger-ui/**

@@ -52,6 +52,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Endpoints internos protegidos con API Key (filtro InternalApiKeyFilter)
                 .requestMatchers(HttpMethod.POST, "/internal/users/validate").permitAll()
+                .requestMatchers(HttpMethod.POST, "/internal/users").permitAll()
                 // Documentación Swagger - público
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
