@@ -200,6 +200,72 @@ sequenceDiagram
 - No repetir contenido ya detallado en los README de cada microservicio.
 - Enlazar documentación específica según corresponda.
 
+## 🐳 Despliegue con Docker
+
+Nova Commerce está completamente contenerizado para facilitar el despliegue y escalado.
+
+### Inicio Rápido
+
+**Windows (PowerShell):**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\docker-manage.ps1
+```
+
+**Linux/Mac (Bash):**
+```bash
+chmod +x docker-manage.sh
+./docker-manage.sh
+```
+
+**Comando directo:**
+```bash
+docker-compose up -d
+```
+
+### Documentación Docker
+
+- **Guía Completa**: [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+- **Referencia Rápida**: [DOCKER_QUICK_REFERENCE.md](DOCKER_QUICK_REFERENCE.md)
+- **Checklist de Despliegue**: [DOCKER_DEPLOYMENT_CHECKLIST.md](DOCKER_DEPLOYMENT_CHECKLIST.md)
+- **Resumen de Implementación**: [DOCKER_IMPLEMENTATION_SUMMARY.md](DOCKER_IMPLEMENTATION_SUMMARY.md)
+
+### Características Docker
+
+✅ Dockerfiles multietapa optimizados
+✅ Docker Compose para orquestación
+✅ PostgreSQL 16 integrado
+✅ Scripts de gestión (Bash/PowerShell)
+✅ Health checks automáticos
+✅ Red aislada para servicios
+✅ Volúmenes persistentes para BD
+✅ Variables de entorno configurables
+
+### Puertos de Servicios
+
+| Servicio | Puerto | URL |
+|----------|--------|-----|
+| Auth Service | 8080 | http://localhost:8080 |
+| User Service | 8081 | http://localhost:8081 |
+| Customer Service | 8082 | http://localhost:8082 |
+| Product Service | 8083 | http://localhost:8083 |
+| Order Service | 8085 | http://localhost:8085 |
+| API Gateway | 8090 | http://localhost:8090 |
+| PostgreSQL | 5432 | localhost:5432 |
+
+### Verificar Estado
+
+```bash
+# Ver estado de todos los servicios
+docker-compose ps
+
+# Ver logs en tiempo real
+docker-compose logs -f
+
+# Probar salud de los servicios
+curl http://localhost:8080/actuator/health
+```
+
 ## Documentación por Microservicio
 
 ### Documentación Técnica (README)

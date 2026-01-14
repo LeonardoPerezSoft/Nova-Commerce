@@ -1,0 +1,159 @@
+version: '3.9'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: nova-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nova_commerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nova-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: nova-auth-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+  # User Service
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: nova-user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+  # Customer Service
+  customer-service:
+    build:
+      context: ./backend/customer-service
+      dockerfile: Dockerfile
+    container_name: nova-customer-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+  # Product Service
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    container_name: nova-product-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+  # Order Service
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: nova-order-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+  # API Gateway
+  nova-gateway:
+    build:
+      context: ./backend/nova-gateway
+      dockerfile: Dockerfile
+    container_name: nova-gateway
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nova_commerce
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYXZlcnlzZWN1cmVrZXlmb3JqV1RoYXNiZWVuZ2VuZXJhdGVkZm9ydGVzdGluZ3B1cnBvc2VzYW5kaXNub3Rmb3Jwcm9kdWN0aW9u}
+    ports:
+      - "8090:8090"
+    depends_on:
+      - auth-service
+      - user-service
+      - customer-service
+      - product-service
+      - order-service
+    networks:
+      - nova-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  nova-network:
+    driver: bridge
